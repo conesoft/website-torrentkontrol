@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Properties\PublishProfiles\Deploy.pubxml.user" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Conesoft.Files" Version="1.6.4" />
+    <PackageReference Include="Conesoft.Hosting" Version="0.6.2" />
+    <PackageReference Include="MonoTorrent" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\icons\" />
+  </ItemGroup>
+
+</Project>
