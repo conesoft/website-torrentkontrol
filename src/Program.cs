@@ -12,16 +12,29 @@ var state = Conesoft.Hosting.Host.LocalStorage;
 var cache = state / "Cache";
 var stateFile = state / Filename.From("Torrents", "settings");
 
-using var engine = stateFile.Exists ? await ClientEngine.RestoreStateAsync(stateFile.Path) : new ClientEngine(new EngineSettingsBuilder()
+ClientEngine engine;
+try
 {
-    AllowPortForwarding = true,
-    AutoSaveLoadDhtCache = true,
-    AutoSaveLoadFastResume = true,
-    AutoSaveLoadMagnetLinkMetadata = true,
-    ListenPort = 55123,
-    DhtPort = 55123,
-    CacheDirectory = cache.Path
-}.ToSettings());
+    engine = await ClientEngine.RestoreStateAsync(stateFile.Path);
+}
+catch
+{
+    engine = new(new EngineSettingsBuilder()
+    {
+        AllowPortForwarding = true,
+        AutoSaveLoadDhtCache = true,
+        AutoSaveLoadFastResume = true,
+        AutoSaveLoadMagnetLinkMetadata = true,
+        ListenPort = 55123,
+        DhtPort = 55123,
+        CacheDirectory = cache.Path
+    }.ToSettings());
+
+    foreach(var file in (cache / "metadata").Filtered("*.torrent", allDirectories: false))
+    {
+        await engine.AddAsync(await Torrent.LoadAsync(file.Path), downloadFolder.Path);
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
