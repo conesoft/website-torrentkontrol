@@ -16,5 +16,13 @@
   "theme_color": "#000000",
   "background_color": "#000000",
   "start_url": "https://torrentkontrol.conesoft.net",
-  "display": "standalone"
+  "display": "standalone",
+  "file_handlers": [
+    {
+      "action": "/addtorrentfile",
+      "accept": {
+        "application/x-bittorrent": [ ".torrent" ]
+      }
+    }
+  ]
 }

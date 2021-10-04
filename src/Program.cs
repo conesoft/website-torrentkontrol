@@ -1,11 +1,13 @@
-﻿using MonoTorrent;
-using MonoTorrent.Client;
-using Conesoft.Files;
+﻿using Conesoft.Files;
 using Conesoft.Hosting;
-using Directory = Conesoft.Files.Directory;
+using MonoTorrent;
+using MonoTorrent.Client;
+
+var configuration = new ConfigurationBuilder().AddJsonFile(Conesoft.Hosting.Host.GlobalSettings.Path).Build();
+var wirepusher = configuration["wirepusher:url"];
 
 var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
-var downloadFolder = Directory.From(config.DownloadUrl);
+var downloadFolder = Conesoft.Files.Directory.From(config.DownloadUrl);
 
 var state = Conesoft.Hosting.Host.LocalStorage;
 
@@ -73,6 +75,7 @@ var torrentAutomation = Task.Run(async () =>
                 case TorrentState.Seeding:
                     await torrent.StopAsync();
                     await engine.RemoveAsync(torrent);
+                    await Notify($"{torrent.Torrent.Name} Finished", $"The Torrent '{torrent.Torrent.Name}' successfully finished downloading", "Server");
                     break;
             }
             await engine.SaveStateAsync(stateFile.Path);
@@ -86,6 +89,8 @@ await Task.Delay(5000);
 await engine.StartAllAsync();
 
 await Task.WhenAny(server, torrentAutomation);
+
+Task Notify(string title, string message, string type) => new HttpClient().GetAsync(wirepusher + $@"title={title}&message={message}&type={type}");
 
 record MagnetData(string Magnet);
 record Config(string DownloadUrl);
