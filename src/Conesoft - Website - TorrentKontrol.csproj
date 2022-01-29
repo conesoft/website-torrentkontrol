@@ -10,9 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Conesoft.Files" Version="1.6.4" />
+    <PackageReference Include="Conesoft.Files" Version="1.7.0" />
     <PackageReference Include="Conesoft.Hosting" Version="0.6.2" />
-    <PackageReference Include="MonoTorrent" Version="2.0.0" />
+    <PackageReference Include="MonoTorrent" Version="2.0.4" />
   </ItemGroup>
 
   <ItemGroup>

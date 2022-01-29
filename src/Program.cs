@@ -2,6 +2,7 @@
 using Conesoft.Hosting;
 using MonoTorrent;
 using MonoTorrent.Client;
+using System.Text.RegularExpressions;
 
 var configuration = new ConfigurationBuilder().AddJsonFile(Conesoft.Hosting.Host.GlobalSettings.Path).Build();
 var wirepusher = configuration["wirepusher:url"];
@@ -32,9 +33,11 @@ catch
         CacheDirectory = cache.Path
     }.ToSettings());
 
-    foreach(var file in (cache / "metadata").Filtered("*.torrent", allDirectories: false))
+
+
+    foreach (var file in (cache / "metadata").Filtered("*.torrent", allDirectories: false))
     {
-        await engine.AddAsync(await Torrent.LoadAsync(file.Path), downloadFolder.Path);
+        var t = await engine.AddAsync(await Torrent.LoadAsync(file.Path), downloadFolder.Path);
     }
 }
 
@@ -43,8 +46,44 @@ var app = builder.Build();
 
 app.UseHostingDefaults(useDefaultFiles: true, useStaticFiles: true);
 
-app.MapGet("/torrents", () => engine.Torrents.Select(t => new { Name = t.Torrent?.Name ?? "<no name yet>", t.Progress, t.Size, t.Monitor.DownloadSpeed, State = Enum.GetName(t.State) }));
-app.MapGet("/files", () => downloadFolder.Files.Select(f => new { Name = f.NameWithoutExtension, f.Extension }));
+app.MapGet("/torrents", () => engine.Torrents.Select(t => new { Hash = t.InfoHash.ToHex(), Magnet = t.MagnetLink.Name ?? t.MagnetLink.InfoHash.ToHex(), Name = t.Torrent?.Name ?? "<no name yet>", t.Progress, t.Size, t.Monitor.DownloadSpeed, State = Enum.GetName(t.State) }));
+app.MapGet("/cancel", (string hash) =>
+{
+    var _ = Task.WhenAll(engine.Torrents.Where(t => t.InfoHash.ToHex() == hash).Select(async t =>
+    {
+        try
+        {
+            await t.StopAsync();
+            await engine.RemoveAsync(t);
+        }
+        catch { }
+    }));
+    return Results.Redirect("/");
+});
+app.MapGet("/files", () =>
+{
+    var files = downloadFolder.Files.Select(f => new DownloadedData(f.NameWithoutExtension, "", f.Info.Length));
+    var directories = downloadFolder.Directories.Select(d => new DownloadedData(d.Name, "", d.AllFiles.Sum(f => f.Info.Length)));
+
+    var cleanup = new[] { "2160p", "1080p", "BluRay", "AC3", "WEB", "H264", "ATMOS", "4K", "HD", "WEBrip", "ITA", "ENG", "AMZN", "WEB-DL", "DDP5", "HDR", "x264", "x265", "264", "265", "BDRip" };
+    return files
+    .Concat(directories)
+    .Select(f => f with { Name = f.Name.Replace(".", " ") })
+    .Select(f => f with { Name = Regex.Replace(f.Name, @" ?\(.*?\)", string.Empty) })
+    .Select(f => f with { Name = Regex.Replace(f.Name, @" ?\{.*?\}", string.Empty) })
+    .Select(f => f with { Name = Regex.Replace(f.Name, @" ?\[.*?\]", string.Empty) })
+    .Select(f =>
+    {
+        var filtered = f.Name;
+        foreach (var c in cleanup)
+        {
+            filtered = filtered.Replace(" " + c + " ", " ", StringComparison.OrdinalIgnoreCase);
+        }
+        filtered = string.Join(" ", filtered.Split().Where(s => s.Contains('-') == false));
+        return f with { Name = filtered };
+    })
+    .OrderBy(f => f.Name);
+});
 app.MapPost("/addtorrent", async (MagnetData data) =>
 {
     var torrent = await engine.AddAsync(MagnetLink.Parse(data.Magnet), downloadFolder.Path);
@@ -59,6 +98,32 @@ app.MapGet("/addmagneturi", async (string uri) =>
     await torrent.StartAsync();
     await engine.SaveStateAsync(stateFile.Path);
     return "<style>html { background: black; color: green; font-family: monospace; margin: 5rem }</style>added " + uri + "<script>setTimeout(function() { window.history.back() },333)</script>";
+});
+app.MapGet("/links", async () =>
+{
+    var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
+    var links = config.Links;
+
+    using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
+    {
+        var changes = false;
+        links = await Task.WhenAll(links.Select(async link =>
+        {
+            var response = await http.GetAsync("https://" + link.Url);
+            if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
+            {
+                changes = true;
+                return link with { Url = response.Headers.Location.Host };
+            }
+            return link;
+        }));
+        if (changes)
+        {
+            await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
+        }
+    }
+
+    return links;
 });
 app.MapGet("/test", () => "Hi");
 
@@ -93,4 +158,8 @@ await Task.WhenAny(server, torrentAutomation);
 Task Notify(string title, string message, string type) => new HttpClient().GetAsync(wirepusher + $@"title={title}&message={message}&type={type}");
 
 record MagnetData(string Magnet);
-record Config(string DownloadUrl);
+
+record DownloadedData(string Name, string Extension, long Size);
+
+record Link(string Url, string Name);
+record Config(string DownloadUrl, Link[] Links);

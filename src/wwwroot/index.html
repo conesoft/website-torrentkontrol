@@ -18,7 +18,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="TorrentKontrol">
     <meta property="og:description" content="TorrentKontrol by Conesoft">
-    <!--    <meta property="og:image" content="/icons/">-->
+    <meta property="og:image" content="/meta-image.jpg">
 
     <meta name="viewport" content="width=device-width">
     <base href="~/">
@@ -35,6 +35,7 @@
             <button onclick='addtorrent()'>add through magnet link</button>
             <button onclick='addtorrent()' disabled>add through torrent file [not yet supported]</button>
         </section>
+        <ul id="links"></ul>
     </section>
     <section>
         <h1>torrents</h1>
@@ -74,25 +75,43 @@
             })
         }
 
+        async function updateList(id, mapping) {
+            let list = await (await fetch('/' + id)).json()
+            let html = list.map(mapping).map(entry => entry !== null ? '<li>' + entry + '</li>' : '').join('\n')
+            var item = document.getElementById(id)
+            if (html !== item.innerHTML) {
+                item.innerHTML = html
+            }
+        }
+
         async function loop() {
             while (true) {
                 let torrents = await (await fetch('/torrents')).json()
 
-                document.getElementById('torrents').innerHTML = ''
-                torrents.forEach(t => document.getElementById('torrents').innerHTML +=
-                    `<li>
-                    <b>${t.name}</b>
-                    <div>size: ${Humanize.fileSize(t.size)}, ${t.progress.toFixed(2)}%, speed: ${Humanize.fileSize(t.downloadSpeed)}/s ${t.state.toLowerCase()}
-                    <progress max='100' value=${t.progress}>
-                    </li>\n`
+                await updateList('torrents', torrent =>
+                    (torrent.state.toLowerCase() !== 'stopping' && torrent.state.toLowerCase() !== 'stopped')
+                        ?
+                            (torrent.size == -1)
+                                ? `<b>${torrent.magnet.toLowerCase()}</b>
+                                    <aside>incoming transmission ...</aside>
+                                    <form method='get' action='/cancel'>
+                                        <input type=hidden name=hash value='${torrent.hash}'>
+                                        <input type=submit value='x'>
+                                    </form>`
+                                : `<b>${torrent.name}</b>
+                                    <aside>size: ${Humanize.fileSize(torrent.size)}, ${torrent.progress.toFixed(2)}%, speed: ${Humanize.fileSize(torrent.downloadSpeed)}/s ${torrent.state.toLowerCase()}</aside>
+                                    <progress max='100' value=${torrent.progress}></progress>
+                                    <form method='get' action='/cancel'>
+                                        <input type=hidden name=hash value='${torrent.hash}'>
+                                        <input type=submit value='x'>
+                                    </form>`
+                        : null
                 )
 
-                let files = await (await fetch('/files')).json()
+                await updateList('files', file => file.name + file.extension + ' ' + Humanize.fileSize(file.size))
+                await updateList('links', link => '<a href="https://' + link.url + '" target="_blank">' + link.name + '</a>')
 
-                document.getElementById('files').innerHTML = ''
-                files.forEach(t => document.getElementById('files').innerHTML += '<li>' + t.name + t.extension + '</li>\n')
-
-                await sleep(100)
+                await sleep(333)
             }
         }
 
