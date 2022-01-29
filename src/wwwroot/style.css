@@ -48,17 +48,16 @@ button, input[type=submit] {
         opacity: 0.7;
     }
 
-    form {
+    li button {
         position: absolute;
         right: 0.5rem;
         top: 0.5rem;
         bottom: 0.5rem;
         width: 4rem;
         opacity: 0.3;
-        transition: opacity linear 0.3s;
     }
 
-    form:hover {
+    li button:hover {
         opacity: 1;
     }
 

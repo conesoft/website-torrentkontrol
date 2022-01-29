@@ -46,7 +46,7 @@ var app = builder.Build();
 
 app.UseHostingDefaults(useDefaultFiles: true, useStaticFiles: true);
 
-app.MapGet("/torrents", () => engine.Torrents.Select(t => new { Hash = t.InfoHash.ToHex(), Magnet = t.MagnetLink.Name ?? t.MagnetLink.InfoHash.ToHex(), Name = t.Torrent?.Name ?? "<no name yet>", t.Progress, t.Size, t.Monitor.DownloadSpeed, State = Enum.GetName(t.State) }));
+app.MapGet("/torrents", () => engine.Torrents.Select(t => new { Hash = t.InfoHash.ToHex(), Name = t.Torrent?.Name ?? t.MagnetLink.Name ?? t.MagnetLink.InfoHash.ToHex(), t.Progress, t.Size, t.Monitor.DownloadSpeed, State = Enum.GetName(t.State) }));
 app.MapGet("/cancel", (string hash) =>
 {
     var _ = Task.WhenAll(engine.Torrents.Where(t => t.InfoHash.ToHex() == hash).Select(async t =>
@@ -59,6 +59,19 @@ app.MapGet("/cancel", (string hash) =>
         catch { }
     }));
     return Results.Redirect("/");
+});
+app.MapPost("/removetorrent", (TorrentData data) =>
+{
+    var _ = Task.WhenAll(engine.Torrents.Where(t => t.InfoHash.ToHex() == data.Hash).Select(async t =>
+    {
+        try
+        {
+            await t.StopAsync();
+            await engine.RemoveAsync(t);
+        }
+        catch { }
+    }));
+    return "ok";
 });
 app.MapGet("/files", () =>
 {
@@ -158,6 +171,7 @@ await Task.WhenAny(server, torrentAutomation);
 Task Notify(string title, string message, string type) => new HttpClient().GetAsync(wirepusher + $@"title={title}&message={message}&type={type}");
 
 record MagnetData(string Magnet);
+record TorrentData(string Hash);
 
 record DownloadedData(string Name, string Extension, long Size);
 

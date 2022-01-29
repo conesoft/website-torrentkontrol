@@ -75,6 +75,17 @@
             })
         }
 
+        async function removetorrent(hash) {
+            await fetch('/removetorrent', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 'hash': hash })
+            })
+        }
+
         async function updateList(id, mapping) {
             let list = await (await fetch('/' + id)).json()
             let html = list.map(mapping).map(entry => entry !== null ? '<li>' + entry + '</li>' : '').join('\n')
@@ -91,20 +102,12 @@
                 await updateList('torrents', torrent =>
                     (torrent.state.toLowerCase() !== 'stopping' && torrent.state.toLowerCase() !== 'stopped')
                         ?
-                            (torrent.size == -1)
-                                ? `<b>${torrent.magnet.toLowerCase()}</b>
-                                    <aside>incoming transmission ...</aside>
-                                    <form method='get' action='/cancel'>
-                                        <input type=hidden name=hash value='${torrent.hash}'>
-                                        <input type=submit value='x'>
-                                    </form>`
-                                : `<b>${torrent.name}</b>
-                                    <aside>size: ${Humanize.fileSize(torrent.size)}, ${torrent.progress.toFixed(2)}%, speed: ${Humanize.fileSize(torrent.downloadSpeed)}/s ${torrent.state.toLowerCase()}</aside>
-                                    <progress max='100' value=${torrent.progress}></progress>
-                                    <form method='get' action='/cancel'>
-                                        <input type=hidden name=hash value='${torrent.hash}'>
-                                        <input type=submit value='x'>
-                                    </form>`
+                            `<b>${torrent.name}</b>
+                            ${(torrent.size == -1
+                                ? `<aside>incoming transmission ...</aside>`
+                                : `<aside>size: ${Humanize.fileSize(torrent.size)}, ${torrent.progress.toFixed(2)}%, speed: ${Humanize.fileSize(torrent.downloadSpeed)}/s ${torrent.state.toLowerCase()}</aside>
+                                    <progress max='100' value=${torrent.progress}></progress>`
+                            )}<button onclick='removetorrent("${torrent.hash}")'>x</button>`
                         : null
                 )
 
