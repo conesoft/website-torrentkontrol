@@ -97,16 +97,16 @@
 
         async function loop() {
             while (true) {
-                await Promise.all(
+                let requests = [
                     updateList('torrents', torrent =>
                         (torrent.state.toLowerCase() !== 'stopping' && torrent.state.toLowerCase() !== 'stopped')
                             ?
-                                `<b>${torrent.name}</b>
+                            `<b>${torrent.name}</b>
                                 ${(torrent.size == -1
-                                    ? `<aside>incoming transmission ...</aside>`
-                                    : `<aside>size: ${Humanize.fileSize(torrent.size)}, ${torrent.progress.toFixed(2)}%, speed: ${Humanize.fileSize(torrent.downloadSpeed)}/s ${torrent.state.toLowerCase()}</aside>
+                                ? `<aside>incoming transmission ...</aside>`
+                                : `<aside>size: ${Humanize.fileSize(torrent.size)}, ${torrent.progress.toFixed(2)}%, speed: ${Humanize.fileSize(torrent.downloadSpeed)}/s ${torrent.state.toLowerCase()}</aside>
                                         <progress max='100' value=${torrent.progress}></progress>`
-                                )}<button onclick='removetorrent("${torrent.hash}")'>x</button>`
+                            )}<button onclick='removetorrent("${torrent.hash}")'>x</button>`
                             : null
                     ),
 
@@ -114,7 +114,8 @@
                     updateList('links', link => '<a href="https://' + link.url + '" target="_blank">' + link.name + '</a>'),
 
                     sleep(333)
-                )
+                ]
+                await Promise.all(requests)
             }
         }
 

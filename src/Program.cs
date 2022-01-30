@@ -133,34 +133,41 @@ app.MapGet("/addmagneturi", async (string uri) =>
         "</body>" +
     "</html>";
 });
-bool firsttimelinksrequest = true;
+var linksrequest = Task.CompletedTask;
 app.MapGet("/links", async () =>
 {
     var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
     var links = config.Links;
 
-    if(firsttimelinksrequest == false)
+    if(linksrequest.IsCompleted)
     {
-        using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
+        linksrequest = Task.WhenAll(new Task[]
         {
-            var changes = false;
-            links = await Task.WhenAll(links.Select(async link =>
+            Task.Run(async () =>
             {
-                var response = await http.GetAsync("https://" + link.Url);
-                if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
+                using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
                 {
-                    changes = true;
-                    return link with { Url = response.Headers.Location.Host };
+                    var changes = false;
+                    links = await Task.WhenAll(links.Select(async link =>
+                    {
+                        var response = await http.GetAsync("https://" + link.Url);
+                        if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
+                        {
+                            changes = true;
+                            return link with { Url = response.Headers.Location.Host };
+                        }
+                        return link;
+                    }));
+                    if (changes)
+                    {
+                        await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
+                    }
+                    Console.WriteLine("!!checked url!!");
                 }
-                return link;
-            }));
-            if (changes)
-            {
-                await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
-            }
-        }
+            }),
+            Task.Delay(5000)
+        });
     }
-    firsttimelinksrequest = false;
 
     return links;
 });
