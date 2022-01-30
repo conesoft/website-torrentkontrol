@@ -107,34 +107,60 @@ app.MapPost("/addtorrent", async (MagnetData data) =>
 app.MapGet("/addmagneturi", async (string uri) =>
 {
     uri = Uri.UnescapeDataString(uri);
-    var torrent = await engine.AddAsync(MagnetLink.Parse(uri), downloadFolder.Path);
+    var magnet = MagnetLink.Parse(uri);
+    var torrent = await engine.AddAsync(magnet, downloadFolder.Path);
     await torrent.StartAsync();
     await engine.SaveStateAsync(stateFile.Path);
-    return "<style>html { background: black; color: green; font-family: monospace; margin: 5rem }</style>added " + uri + "<script>setTimeout(function() { window.history.back() },333)</script>";
+    return "" +
+    "<!DOCTYPE html>" +
+    "<html lang=\"en\">" +
+        "<head prefix=\"og: http://ogp.me/ns#\">" +
+            "<meta charset=\"utf-8\">" +
+            "<style>html { background: black; }</style>" +
+            "<link rel='stylesheet type='text/css' href='/style.css'>" +
+            "<script>setTimeout(function() { window.history.back() }, 333)</script>" +
+        "</head>" +
+        "<body>" +
+            "<header>" +
+                "<h1>TorrentKontrol</h1>" +
+            "</header>" +
+            "<section>" +
+                "<h1>adding torrent</h1>" +
+                "<ul>" +
+                    "<li>" + magnet.Name ?? magnet.ToV1Uri() + "</li>" +
+                "</ul>" +
+            "</section>" +
+        "</body>" +
+    "</html>";
 });
+bool firsttimelinksrequest = true;
 app.MapGet("/links", async () =>
 {
     var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
     var links = config.Links;
 
-    using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
+    if(firsttimelinksrequest == false)
     {
-        var changes = false;
-        links = await Task.WhenAll(links.Select(async link =>
+        using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
         {
-            var response = await http.GetAsync("https://" + link.Url);
-            if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
+            var changes = false;
+            links = await Task.WhenAll(links.Select(async link =>
             {
-                changes = true;
-                return link with { Url = response.Headers.Location.Host };
+                var response = await http.GetAsync("https://" + link.Url);
+                if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
+                {
+                    changes = true;
+                    return link with { Url = response.Headers.Location.Host };
+                }
+                return link;
+            }));
+            if (changes)
+            {
+                await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
             }
-            return link;
-        }));
-        if (changes)
-        {
-            await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
         }
     }
+    firsttimelinksrequest = false;
 
     return links;
 });
