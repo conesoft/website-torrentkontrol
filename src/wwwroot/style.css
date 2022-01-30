@@ -16,15 +16,15 @@
 
 a {
     color: #DDD;
-    text-decoration: none;
+    text-decoration-color: transparent;
     opacity: 0.8;
     transition: all 0.33s linear;
 }
 
-a:hover {
-    opacity: 1;
-    text-decoration: underline;
-}
+    a:hover {
+        text-decoration-color: #DDD;
+        opacity: 1;
+    }
 
 head, script {
     display: none;
@@ -38,6 +38,7 @@ button, input[type=submit] {
     font-size: inherit;
     font-weight: inherit;
     font-family: inherit;
+    transition: all 0.33s linear;
 }
 
     button:hover:not(:disabled), input[type=submit]:hover:not(:disabled) {
@@ -48,14 +49,14 @@ button, input[type=submit] {
         opacity: 0.7;
     }
 
-    li button {
-        position: absolute;
-        right: 0.5rem;
-        top: 0.5rem;
-        bottom: 0.5rem;
-        width: 4rem;
-        opacity: 0.3;
-    }
+li button {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 4rem;
+    opacity: 0.3;
+}
 
     li button:hover {
         opacity: 1;
@@ -74,13 +75,13 @@ aside {
     text-overflow: ellipsis;
 }
 
-    li:nth-child(2n + 1) {
-        background-color: #111;
-    }
+li:nth-child(2n + 1) {
+    background-color: #111;
+}
 
-    li:nth-child(2n) {
-        background-color: #222;
-    }
+li:nth-child(2n) {
+    background-color: #222;
+}
 
 @media (min-aspect-ratio: 1/1) {
     body {
@@ -111,9 +112,10 @@ footer {
     bottom: 0;
     background: black;
 }
-footer p {
-    opacity: 0.7;
-}
+
+    footer p {
+        opacity: 0.7;
+    }
 
 p, p * {
     display: inline;

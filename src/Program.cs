@@ -133,6 +133,7 @@ app.MapGet("/addmagneturi", async (string uri) =>
         "</body>" +
     "</html>";
 });
+
 var linksrequest = Task.CompletedTask;
 app.MapGet("/links", async () =>
 {
@@ -141,8 +142,7 @@ app.MapGet("/links", async () =>
 
     if(linksrequest.IsCompleted)
     {
-        linksrequest = Task.WhenAll(new Task[]
-        {
+        linksrequest = Task.WhenAll(
             Task.Run(async () =>
             {
                 using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
@@ -162,16 +162,14 @@ app.MapGet("/links", async () =>
                     {
                         await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
                     }
-                    Console.WriteLine("!!checked url!!");
                 }
             }),
             Task.Delay(5000)
-        });
+        );
     }
 
     return links;
 });
-app.MapGet("/test", () => "Hi");
 
 var server = app.RunAsync();
 
