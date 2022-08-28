@@ -97,6 +97,9 @@ app.MapGet("/files", () =>
     })
     .OrderBy(f => f.Name);
 });
+app.MapPost("/addtorrentfile", async (HttpRequest request) =>
+{
+});
 app.MapPost("/addtorrent", async (MagnetData data) =>
 {
     var torrent = await engine.AddAsync(MagnetLink.Parse(data.Magnet), downloadFolder.Path);
@@ -140,31 +143,29 @@ app.MapGet("/links", async () =>
     var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
     var links = config.Links;
 
-    if(linksrequest.IsCompleted)
+    if (linksrequest.IsCompleted)
     {
         linksrequest = Task.WhenAll(
             Task.Run(async () =>
             {
-                using (var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false }))
+                using var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false });
+                var changes = false;
+                links = await Task.WhenAll(links.Select(async link =>
                 {
-                    var changes = false;
-                    links = await Task.WhenAll(links.Select(async link =>
+                    var response = await http.GetAsync("https://" + link.Url);
+                    if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
                     {
-                        var response = await http.GetAsync("https://" + link.Url);
-                        if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
-                        {
-                            changes = true;
-                            return link with { Url = response.Headers.Location.Host };
-                        }
-                        return link;
-                    }));
-                    if (changes)
-                    {
-                        await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
+                        changes = true;
+                        return link with { Url = response.Headers.Location.Host };
                     }
+                    return link;
+                }));
+                if (changes)
+                {
+                    await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
                 }
             }),
-            Task.Delay(5000)
+            Task.Delay(TimeSpan.FromDays(1))
         );
     }
 
