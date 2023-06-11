@@ -1,11 +1,14 @@
 ﻿using Conesoft.Files;
 using Conesoft.Hosting;
+using Microsoft.AspNetCore.Http.Extensions;
 using MonoTorrent;
 using MonoTorrent.Client;
 using System.Text.RegularExpressions;
+using System.Web;
+using static System.Net.WebRequestMethods;
 
 var configuration = new ConfigurationBuilder().AddJsonFile(Conesoft.Hosting.Host.GlobalSettings.Path).Build();
-var wirepusher = configuration["wirepusher:url"];
+var conesoftSecret = configuration["conesoft:secret"] ?? throw new Exception("Conesoft Secret not found in Configuration");
 
 var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
 var downloadFolder = Conesoft.Files.Directory.From(config.DownloadUrl);
@@ -75,8 +78,8 @@ app.MapPost("/removetorrent", (TorrentData data) =>
 });
 app.MapGet("/files", () =>
 {
-    var files = downloadFolder.Files.Select(f => new DownloadedData(f.NameWithoutExtension, "", f.Info.Length));
-    var directories = downloadFolder.Directories.Select(d => new DownloadedData(d.Name, "", d.AllFiles.Sum(f => f.Info.Length)));
+    var files = downloadFolder.Files.Select(f => new DownloadedData(f.NameWithoutExtension, f.NameWithoutExtension, f.Extension, f.Info.Length));
+    var directories = downloadFolder.Directories.Select(d => new DownloadedData(d.Name, d.Name, "", d.AllFiles.Sum(f => f.Info.Length)));
 
     var cleanup = new[] { "2160p", "1080p", "BluRay", "AC3", "WEB", "H264", "ATMOS", "4K", "HD", "WEBrip", "ITA", "ENG", "AMZN", "WEB-DL", "DDP5", "HDR", "x264", "x265", "264", "265", "BDRip" };
     return files
@@ -120,7 +123,7 @@ app.MapGet("/addmagneturi", async (string uri) =>
         "<head prefix=\"og: http://ogp.me/ns#\">" +
             "<meta charset=\"utf-8\">" +
             "<style>html { background: black; }</style>" +
-            "<link rel='stylesheet type='text/css' href='/style.css'>" +
+            "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.conesoft.net/style.min.css?v=69b234d1a360222b8f6aa8d27bf1af81\">" +
             "<script>setTimeout(function() { window.history.back() }, 333)</script>" +
         "</head>" +
         "<body>" +
@@ -184,8 +187,12 @@ var torrentAutomation = Task.Run(async () =>
             {
                 case TorrentState.Seeding:
                     await torrent.StopAsync();
-                    await engine.RemoveAsync(torrent);
-                    await Notify($"{torrent.Torrent.Name} Finished", $"The Torrent '{torrent.Torrent.Name}' successfully finished downloading", "Server");
+                await engine.RemoveAsync(torrent);
+                    await Notify(
+                        title: $"{torrent.Torrent.Name} Finished",
+                        message: $"The Torrent '{torrent.Torrent.Name}' successfully finished downloading",
+                        url: $"https://files.conesoft.net/Downloads/Torrents/{torrent.Torrent.Name}"
+                    );
                     break;
             }
             await engine.SaveStateAsync(stateFile.Path);
@@ -200,12 +207,23 @@ await engine.StartAllAsync();
 
 await Task.WhenAny(server, torrentAutomation);
 
-Task Notify(string title, string message, string type) => new HttpClient().GetAsync(wirepusher + $@"title={title}&message={message}&type={type}");
+async Task Notify(string title, string message, string url)
+{
+    var query = new QueryBuilder
+    {
+        { "token", conesoftSecret },
+        { "title", title },
+        { "message", message },
+        { "url", url }
+    };
+ 
+    await new HttpClient().GetAsync($@"https://conesoft.net/notify" + query.ToQueryString());
+}
 
 record MagnetData(string Magnet);
 record TorrentData(string Hash);
 
-record DownloadedData(string Name, string Extension, long Size);
+record DownloadedData(string Name, string Fullname, string Extension, long Size);
 
 record Link(string Url, string Name);
 record Config(string DownloadUrl, Link[] Links);

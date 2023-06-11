@@ -17,6 +17,7 @@
   "background_color": "#000000",
   "start_url": "https://torrentkontrol.conesoft.net",
   "display": "standalone",
+  "display_override": [ "window-controls-overlay" ],
   "url_handlers": [
     {
       "origin": "https://torrentkontrol.conesoft.net"
