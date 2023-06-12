@@ -1,5 +1,14 @@
-﻿li {
+﻿body {
+    grid-template-rows: auto auto auto 1fr;
+}
+
+h1 {
+    place-self: end;
+}
+
+li {
     place-items: center;
+    grid-auto-flow: row;
 }
 
 li *:not(progress) {
@@ -28,4 +37,15 @@ li:nth-child(2n + 1) progress::-webkit-progress-bar {
 
 li:nth-child(2n) progress::-webkit-progress-bar {
     background-color: #222;
+}
+
+header {
+    padding-block: 0.5rem;
+    margin-block: 1rem;
+}
+
+header h1 {
+    font-size: min(10cqw, 2em);
+    line-height: 1em;
+    padding-block: 0;
 }
