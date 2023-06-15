@@ -8,19 +8,22 @@ h1 {
 
 li {
     place-items: center;
-    grid-auto-flow: row;
+    contain: content;
 }
 
-li *:not(progress) {
-    z-index: 1;
-    background-color: transparent;
-}
+    li:has(progress) *:not(progress) {
+        z-index: 1;
+    }
+
+    li *:not(progress):not(button) {
+        background-color: transparent;
+    }
 
 progress {
     height: 100%;
     margin: 0;
-    inset: 0;
     position: absolute;
+    inset: 0;
 }
 
 li b {
@@ -44,8 +47,8 @@ header {
     margin-block: 1rem;
 }
 
-header h1 {
-    font-size: min(10cqw, 2em);
-    line-height: 1em;
-    padding-block: 0;
-}
+    header h1 {
+        font-size: min(10cqw, 2em);
+        line-height: 1em;
+        padding-block: 0;
+    }
