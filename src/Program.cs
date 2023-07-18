@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 using MonoTorrent;
 using MonoTorrent.Client;
 using System.Text.RegularExpressions;
-using System.Web;
-using static System.Net.WebRequestMethods;
 
 var configuration = new ConfigurationBuilder().AddJsonFile(Conesoft.Hosting.Host.GlobalSettings.Path).Build();
 var conesoftSecret = configuration["conesoft:secret"] ?? throw new Exception("Conesoft Secret not found in Configuration");
@@ -102,6 +100,7 @@ app.MapGet("/files", () =>
 });
 app.MapPost("/addtorrentfile", async (HttpRequest request) =>
 {
+    await Task.CompletedTask;
 });
 app.MapPost("/addtorrent", async (MagnetData data) =>
 {
@@ -165,7 +164,7 @@ app.MapGet("/links", async () =>
                 }));
                 if (changes)
                 {
-                    await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links }, pretty: true);
+                    await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links });
                 }
             }),
             Task.Delay(TimeSpan.FromDays(1))
