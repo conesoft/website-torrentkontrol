@@ -1,0 +1,32 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@namespace Conesoft.Website.TorrentKontrol.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="manifest" href="/icons/site.webmanifest">
+    <meta name="theme-color" content="#000000" />
+    <meta property="og:image" content="/meta-image.jpg" />
+    <meta name="viewport" content="width=device-width; initial-scale=1; viewport-fit=cover">
+    <meta name="view-transition" content="same-origin" />
+    <base href="~/" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.conesoft.net/style.css?v=7a8de4d756e523d3fb18be1a9c7960f5">
+    <link rel="stylesheet" type="text/css" href="@(AppDomain.CurrentDomain.FriendlyName).styles.css" />
+    <component type="typeof(HeadOutlet)" render-mode="Server" />
+</head>
+<body>
+    <component type="typeof(App)" render-mode="Server" />
+    <script src="_framework/blazor.server.js"></script>
+    <footer>
+        <p>&copy; @DateTime.Today.Year</p>
+        <p>written by <a href="https://davepermen.net">davepermen</a></p>
+        <p>a <a href="https://conesoft.net">conesoft product</a> running on .NET @Environment.Version.Major</p>
+    </footer>
+</body>
+</html>
