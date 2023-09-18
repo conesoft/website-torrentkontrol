@@ -1,15 +1,18 @@
 ﻿using Conesoft.Hosting;
 using Conesoft.Users;
+using Conesoft.Website.TorrentKontrol.Components;
+using Conesoft.Website.TorrentKontrol.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddHostConfiguration();
 
-builder.Services.AddSingleton<Conesoft.Website.TorrentKontrol.Helpers.Notification>();
+builder.Services.AddSingleton<Notification>();
+builder.Services.AddHttpClient();
 
 builder.Services.AddUsers("Conesoft.Host.User", (Conesoft.Hosting.Host.GlobalStorage / "Users").Path);
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddRazorComponents()
+    .AddServerComponents();
 
 var app = builder.Build();
 
@@ -24,9 +27,7 @@ app.UseHttpsRedirection();
 app.MapUsers();
 app.UseStaticFiles();
 
-app.UseRouting();
-
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.MapRazorComponents<App>()
+    .AddServerRenderMode();
 
 app.Run();

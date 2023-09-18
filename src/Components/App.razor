@@ -1,0 +1,24 @@
+﻿@using Conesoft.Blazor.Components
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <base href="/" />
+    <HtmlHead />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <script src="_framework/blazor.web.js"></script>
+
+    <footer>
+        <p>&copy; @DateTime.Today.Year</p>
+        <p>written by <a href="https://davepermen.net">davepermen</a></p>
+        <p>a <a href="https://conesoft.net">conesoft product</a> running on .NET @Environment.Version.Major</p>
+    </footer>
+</body>
+
+</html>
