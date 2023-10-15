@@ -25,7 +25,6 @@ li *:not(progress):not(button) {
 #torrents button {
     width: 3rem;
     aspect-ratio: 1;
-    font-size: 2rem;
     --button-color: var(--danger-color);
 }
 
