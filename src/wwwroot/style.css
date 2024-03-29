@@ -1,25 +1,43 @@
-﻿body {
-    grid-template-rows: auto auto auto 1fr;
+﻿section {
+    display: grid;
 }
 
 h1 {
-    place-self: end;
+    line-height: 2rem;
 }
 
-li {
-    place-items: center;
-    contain: content;
+li:has(progress) *:not(progress) {
+    z-index: 1;
 }
 
-    li:has(progress) *:not(progress) {
-        z-index: 1;
-    }
+li *:not(progress):not(button) {
+    background-color: transparent;
+}
 
-    li *:not(progress):not(button) {
-        background-color: transparent;
-    }
+#links a {
+    text-align: center;
+}
+
+#torrents section {
+    padding: 0.5rem;
+}
+
+#torrents button {
+    width: 3rem;
+    aspect-ratio: 1;
+    --button-color: var(--danger-color);
+}
+
+#files li {
+    padding-inline: 0.5rem;
+}
+
+section:has(progress) {
+    position: relative;
+}
 
 progress {
+    width: 100%;
     height: 100%;
     margin: 0;
     position: absolute;
@@ -27,28 +45,6 @@ progress {
 }
 
 li b {
-    mix-blend-mode: color-dodge;
-}
-
-li aside {
+    color: var(--accent-color);
     mix-blend-mode: difference;
 }
-
-li:nth-child(2n + 1) progress::-webkit-progress-bar {
-    background-color: #111;
-}
-
-li:nth-child(2n) progress::-webkit-progress-bar {
-    background-color: #222;
-}
-
-header {
-    padding-block: 0.5rem;
-    margin-block: 1rem;
-}
-
-    header h1 {
-        font-size: min(10cqw, 2em);
-        line-height: 1em;
-        padding-block: 0;
-    }
