@@ -1,0 +1,47 @@
+﻿@rendermode InteractiveServer
+
+@foreach(var link in links)
+{
+    <a href="https://@link.Url" target="_blank">@link.Name.ToLowerInvariant()</a>
+}
+
+@code {
+    Task linksrequest = Task.CompletedTask;
+    Link[] links = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
+        links = config.Links;
+
+        if (linksrequest.IsCompleted)
+        {
+            linksrequest = Task.WhenAll(
+                Task.Run(async () =>
+                {
+                    using var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false });
+                    var changes = false;
+                    links = await Task.WhenAll(links.Select(async link =>
+                    {
+                        var response = await http.GetAsync("https://" + link.Url);
+                        if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
+                        {
+                            changes = true;
+                            return link with { Url = response.Headers.Location.Host };
+                        }
+                        return link;
+                    }));
+                    StateHasChanged();
+                    if (changes)
+                    {
+                        await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links });
+                    }
+                }),
+                Task.Delay(TimeSpan.FromDays(1))
+            );
+        }
+    }
+
+    record Link(string Url, string Name);
+    record Config(string DownloadUrl, Link[] Links);
+}

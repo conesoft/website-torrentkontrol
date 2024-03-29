@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Torrent5": {
+    "TorrentKontrol": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
