@@ -2,32 +2,36 @@
 using Conesoft.Users;
 using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Helpers;
+using Conesoft.Website.TorrentKontrol.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddHostConfiguration();
 
-builder.Services.AddSingleton<Notification>();
-builder.Services.AddHttpClient();
+builder.Services
+    .AddSingleton<Notification>()
 
-builder.Services.AddUsers("Conesoft.Host.User", (Conesoft.Hosting.Host.GlobalStorage / "Users").Path);
-builder.Services.AddRazorComponents()
-    .AddServerComponents();
+    .AddSingleton<Torrents>()
+    .AddHostedService(s => s.GetRequiredService<Torrents>())
+    
+    .AddHttpClient()
+    .AddAntiforgery()
+    .AddCascadingAuthenticationState()
+    .AddUsersWithStorage()
+    .AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
+app
+    .UseDeveloperExceptionPage()
+    .UseHostingDefaults(useDefaultFiles: true, useStaticFiles: true)
+    .UseRouting()
+    .UseStaticFiles()
+    .UseAntiforgery();
 
 app.MapUsers();
-app.UseStaticFiles();
 
 app.MapRazorComponents<App>()
-    .AddServerRenderMode();
+    .AddInteractiveServerRenderMode();
 
 app.Run();

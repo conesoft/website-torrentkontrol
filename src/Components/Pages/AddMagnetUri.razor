@@ -1,0 +1,56 @@
+﻿@page "/addmagneturi"
+@using Conesoft.Website.TorrentKontrol.Services
+@using MonoTorrent
+
+@inject Torrents torrents
+@inject IJSRuntime js
+@inject NavigationManager navigation
+
+@rendermode InteractiveServer
+
+<CascadingAuthenticationState>
+    <Conesoft.Blazor.Components.UserHeaderNav>
+        <NavLink Match=NavLinkMatch.All href="/">⌂ torrentkontrol</NavLink>
+    </Conesoft.Blazor.Components.UserHeaderNav>
+    <main>
+        <Conesoft.Blazor.Components.UserLogin />
+        <section>
+            <h1>adding torrent</h1>
+            <ul>
+                <li>@(string.IsNullOrEmpty(magnet.Name) == false ? magnet.Name : magnet.ToV1Uri())</li>
+            </ul>
+        </section>
+        <section></section>
+    </main>
+</CascadingAuthenticationState>
+
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Uri { get; set; }
+
+    MagnetLink magnet;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Uri != null)
+        {
+            var uri = System.Uri.UnescapeDataString(Uri);
+            magnet = MagnetLink.Parse(uri);
+            try
+            {
+                await torrents.Add(magnet);
+            }
+            catch (Exception)
+            {
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await Task.Delay(333);
+        navigation.NavigateTo("/", forceLoad: false, replace: true);
+    }
+}

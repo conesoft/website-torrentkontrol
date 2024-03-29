@@ -1,20 +1,83 @@
 ﻿@page "/"
+@using Conesoft.Website.TorrentKontrol.Components.Controls
+@using MonoTorrent
 
-<PageTitle>TorrentKontrol</PageTitle>
-<HeadContent>
-    <meta name="description" content="TorrentKontrol by Conesoft">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="TorrentKontrol">
-    <meta property="og:description" content="TorrentKontrol by Conesoft">
-    <meta property="og:image" content="/meta-image.jpg">
-</HeadContent>
+@rendermode InteractiveServer
 
-<header>
-    <h1>TorrentKontrol</h1>
-</header>
-<main>
-    <Conesoft.Blazor.Components.UserLogin />
-    <section>
-        <h2>Torrents here</h2>
-    </section>
-</main>
+@inject Services.Torrents Torrents
+@inject IJSRuntime js
+
+<CascadingAuthenticationState>
+    <Conesoft.Blazor.Components.UserHeaderNav>
+        <NavLink Match=NavLinkMatch.All href="/">⌂ torrentkontrol</NavLink>
+        <AuthorizeView>
+            <Authorized>
+                <UnblockedLink />
+            </Authorized>
+        </AuthorizeView>
+    </Conesoft.Blazor.Components.UserHeaderNav>
+    <main>
+        <AuthorizeView>
+            <Authorized>
+                <section>
+                    <button @onclick="AddMagnet">add magnet</button>
+                </section>
+                <section>
+                    <ul id="torrents">
+                        @if (torrents.Any() == false)
+                        {
+                            <li>
+                                <aside style="color: var(--color-50)">no active torrent yet ... :(</aside>
+                            </li>
+                        }
+                        @foreach (var t in torrents)
+                        {
+                            @if (t.Torrent?.Size > 0)
+                            {
+                                <li horizontal style="grid-template-columns: 1fr auto">
+                                    <section vertical>
+                                        <b>@t.Torrent?.Name</b>
+                                        <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State).ToLowerInvariant()</aside>
+                                        <progress max='100' value=@t.Progress></progress>
+                                    </section>
+                                    <button @onclick="@(() => Torrents.Remove(t))">✕</button>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <aside style="color: var(--accent-color)">incoming transmission ...</aside>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </section>
+                <section>
+                </section>
+            </Authorized>
+        </AuthorizeView>
+    </main>
+</CascadingAuthenticationState>
+
+@code {
+    IList<MonoTorrent.Client.TorrentManager> torrents = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Torrents.Update += () =>
+        {
+            torrents = Torrents.GetAllTorrents();
+            InvokeAsync(() => StateHasChanged());
+
+        };
+    }
+
+    async Task AddMagnet()
+    {
+        var magnet = await js.InvokeAsync<string>("prompt", "add magnet uri");
+        if(magnet != null)
+        {
+            await Torrents.Add(MagnetLink.Parse(magnet));
+        }
+    }
+}

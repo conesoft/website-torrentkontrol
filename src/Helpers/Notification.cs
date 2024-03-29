@@ -2,14 +2,9 @@
 
 namespace Conesoft.Website.TorrentKontrol.Helpers;
 
-public class Notification
+public class Notification(IConfiguration configuration)
 {
-    readonly string conesoftSecret;
-
-    public Notification(IConfiguration configuration)
-    {
-        conesoftSecret = configuration["conesoft:secret"];
-    }
+    readonly string conesoftSecret = configuration["conesoft:secret"];
 
     public async Task Notify(string title, string message, string url)
     {
