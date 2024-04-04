@@ -12,6 +12,10 @@
     protected override async Task OnInitializedAsync()
     {
         var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
+        if(config == null)
+        {
+            throw new FileNotFoundException("Configuration is Missing");
+        }
         links = config.Links;
 
         if (linksrequest.IsCompleted)
@@ -26,8 +30,11 @@
                         var response = await http.GetAsync("https://" + link.Url);
                         if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently)
                         {
-                            changes = true;
-                            return link with { Url = response.Headers.Location.Host };
+                            if(response.Headers.Location is Uri uri)
+                            {
+                                changes = true;
+                                return link with { Url = response.Headers.Location.Host };
+                            }
                         }
                         return link;
                     }));

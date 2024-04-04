@@ -8,14 +8,14 @@
 @inject IJSRuntime js
 
 <CascadingAuthenticationState>
-    <Conesoft.Blazor.Components.UserHeaderNav>
+    <UserHeaderNav>
         <NavLink Match=NavLinkMatch.All href="/">⌂ torrentkontrol</NavLink>
         <AuthorizeView>
             <Authorized>
                 <UnblockedLink />
             </Authorized>
         </AuthorizeView>
-    </Conesoft.Blazor.Components.UserHeaderNav>
+    </UserHeaderNav>
     <main>
         <AuthorizeView>
             <Authorized>
@@ -37,7 +37,7 @@
                                 <li horizontal style="grid-template-columns: 1fr auto">
                                     <section vertical>
                                         <b>@t.Torrent?.Name</b>
-                                        <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State).ToLowerInvariant()</aside>
+                                        <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State)?.ToLowerInvariant()</aside>
                                         <progress max='100' value=@t.Progress></progress>
                                     </section>
                                     <button @onclick="@(() => Torrents.Remove(t))">✕</button>
@@ -46,7 +46,7 @@
                             else
                             {
                                 <li>
-                                    <aside style="color: var(--accent-color)">incoming transmission ...</aside>
+                                    <aside style="color: var(--accent-color)">incoming transmission @(string.IsNullOrEmpty(t.MagnetLink.Name) == false ? $"for {t.MagnetLink.Name}" : "") ...</aside>
                                 </li>
                             }
                         }
@@ -56,20 +56,22 @@
                 </section>
             </Authorized>
         </AuthorizeView>
+
+        <Conesoft.Blazor.Components.Controls.DirectoryListing Path="Downloads/Torrents" />
     </main>
 </CascadingAuthenticationState>
 
 @code {
     IList<MonoTorrent.Client.TorrentManager> torrents = [];
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         Torrents.Update += () =>
         {
             torrents = Torrents.GetAllTorrents();
             InvokeAsync(() => StateHasChanged());
-
         };
+        return Task.CompletedTask;
     }
 
     async Task AddMagnet()

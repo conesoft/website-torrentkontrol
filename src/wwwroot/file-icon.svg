@@ -1,0 +1,6 @@
+﻿<svg viewBox="-.5 -.5 16 16" xmlns="http://www.w3.org/2000/svg" stroke="white" stroke-linecap="square">
+  <path d="
+    M3,1 v13 h9 v-10 l-3,-3 z
+    M9,1.5 v2.5 h2.5
+    M5,6 h5 m-5,2 h5 m-5,2 h5 m-5,2 h3"  />
+</svg>

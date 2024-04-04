@@ -9,15 +9,15 @@
 @rendermode InteractiveServer
 
 <CascadingAuthenticationState>
-    <Conesoft.Blazor.Components.UserHeaderNav>
+    <UserHeaderNav>
         <NavLink Match=NavLinkMatch.All href="/">⌂ torrentkontrol</NavLink>
-    </Conesoft.Blazor.Components.UserHeaderNav>
+    </UserHeaderNav>
     <main>
-        <Conesoft.Blazor.Components.UserLogin />
+        <UserLogin />
         <section>
             <h1>adding torrent</h1>
             <ul>
-                <li>@(string.IsNullOrEmpty(magnet.Name) == false ? magnet.Name : magnet.ToV1Uri())</li>
+                <li>@(string.IsNullOrEmpty(magnet?.Name ?? "") == false ? magnet?.Name : magnet?.ToV1Uri())</li>
             </ul>
         </section>
         <section></section>
@@ -30,7 +30,7 @@
     [SupplyParameterFromQuery]
     public string? Uri { get; set; }
 
-    MagnetLink magnet;
+    MagnetLink? magnet;
 
     protected override async Task OnParametersSetAsync()
     {

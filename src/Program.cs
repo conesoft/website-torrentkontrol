@@ -9,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddHostConfiguration();
 
 builder.Services
+
+    .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public", @"D:\Private"))
     .AddSingleton<Notification>()
 
     .AddSingleton<Torrents>()
