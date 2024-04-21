@@ -9,7 +9,7 @@ namespace Conesoft.Website.TorrentKontrol.Services
     {
         record Engine(ClientEngine TorrentEngine, Conesoft.Files.Directory DownloadFolder, Conesoft.Files.File StateFile, string ConesoftSecret, CancellationTokenSource CancellationTokenSource);
 
-        Engine? engine;
+        static Engine? engine;
 
         public Action? Update { get; set; }
 
@@ -22,7 +22,7 @@ namespace Conesoft.Website.TorrentKontrol.Services
                     var torrents = GetAllTorrents();
                     foreach (var directory in engine.DownloadFolder.Directories)
                     {
-                        var active = torrents.Any(t => t.Torrent?.Name == directory.Name);
+                        var active = torrents.Where(t => t.State == TorrentState.Downloading || t.State == TorrentState.Starting).Any(t => t.Torrent?.Name == directory.Name);
                         if (active && directory.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)
                         {
                             directory.Info.Attributes |= FileAttributes.Hidden;
@@ -34,7 +34,7 @@ namespace Conesoft.Website.TorrentKontrol.Services
                     }
                     foreach (var file in engine.DownloadFolder.Files)
                     {
-                        var active = torrents.Any(t => t.Torrent?.Name == file.Name);
+                        var active = torrents.Where(t => t.State == TorrentState.Downloading || t.State == TorrentState.Starting).Any(t => t.Torrent?.Name == file.Name);
                         if (active && file.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)
                         {
                             file.Info.Attributes |= FileAttributes.Hidden;
@@ -64,6 +64,22 @@ namespace Conesoft.Website.TorrentKontrol.Services
                 var torrent = await engine.TorrentEngine.AddAsync(magnet, engine.DownloadFolder.Path);
                 await torrent.StartAsync();
                 await engine.TorrentEngine.SaveStateAsync(engine.StateFile.Path);
+            }
+        }
+
+        public static async Task Add(string filename, byte[] torrentBytes)
+        {
+            if (engine != null)
+            {
+                var torrentFile = Torrent.Load(torrentBytes);
+                var possibleDirectory = engine.DownloadFolder / torrentFile.Name;
+                var possibleFile = engine.DownloadFolder / Filename.FromExtended(torrentFile.Name);
+                if (possibleDirectory.Exists == false && possibleFile.Exists == false)
+                {
+                    var torrent = await engine.TorrentEngine.AddAsync(torrentFile, engine.DownloadFolder.Path);
+                    await torrent.StartAsync();
+                    await engine.TorrentEngine.SaveStateAsync(engine.StateFile.Path);
+                }
             }
         }
 
@@ -148,8 +164,8 @@ namespace Conesoft.Website.TorrentKontrol.Services
                                 );
                                 break;
                         }
-                        await clientEngine.SaveStateAsync(stateFile.Path);
                     }
+                    await clientEngine.SaveStateAsync(stateFile.Path);
                     await Task.Delay(1000);
                     RefreshTorrentList();
                 }
@@ -183,11 +199,13 @@ namespace Conesoft.Website.TorrentKontrol.Services
         record Link(string Url, string Name);
         record Config(string DownloadUrl, Link[] Links);
 
-        async Task Notify(string title, string message, string url)
+        static async Task Notify(string title, string message, string url)
         {
-            if (engine != null)
+            try
             {
-                var query = new QueryBuilder
+                if (engine != null)
+                {
+                    var query = new QueryBuilder
                 {
                     { "token", engine.ConesoftSecret },
                     { "title", title },
@@ -195,7 +213,11 @@ namespace Conesoft.Website.TorrentKontrol.Services
                     { "url", url }
                 };
 
-                await new HttpClient().GetAsync($@"https://conesoft.net/notify" + query.ToQueryString());
+                    await new HttpClient().GetAsync($@"https://conesoft.net/notify" + query.ToQueryString());
+                }
+            }
+            catch (Exception)
+            {
             }
         }
     }

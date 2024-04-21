@@ -22,13 +22,13 @@ li *:not(progress):not(button) {
     padding: 0.5rem;
 }
 
-#torrents li {
-    height: 3rem;
+#torrents > li {
+    min-height: 3rem;
 }
 
-#torrents li:has(> aside) {
-    place-content: center;
-}
+    #torrents > li:has(> aside) {
+        place-content: center;
+    }
 
 #torrents * > :is(b, aside) {
     line-height: 1rem;
@@ -56,6 +56,7 @@ progress {
     position: absolute;
     inset: 0;
 }
+
     progress::-webkit-progress-value {
         transition: 1s;
     }
@@ -65,3 +66,29 @@ li b {
     color: var(--accent-color);
     mix-blend-mode: difference;
 }
+
+
+
+ul.tags {
+    display: flex;
+    place-content: center start;
+    flex-wrap: wrap;
+    gap: 1ch;
+    mix-blend-mode: difference;
+    padding-top: 0.25rem;
+}
+
+    ul.tags, ul.tags > li {
+        min-height: 1rem;
+    }
+
+        ul.tags > li:not(:empty) {
+            min-height: 0;
+            background: var(--accent-color);
+            color: var(--background-color);
+            border-radius: 0.25rem;
+            padding-inline: 0.5rem;
+            padding-block: 0.125rem;
+            font-size: 0.75rem;
+            font-weight: 900;
+        }

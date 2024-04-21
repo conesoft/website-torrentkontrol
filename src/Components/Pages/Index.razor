@@ -1,6 +1,8 @@
 ﻿@page "/"
 @using Conesoft.Website.TorrentKontrol.Components.Controls
 @using MonoTorrent
+@using System.Reflection
+@using System.Text.RegularExpressions
 
 @rendermode InteractiveServer
 
@@ -34,19 +36,39 @@
                         {
                             @if (t.Torrent?.Size > 0)
                             {
+                                var detailedInfo = DetailedInfo.GetFromTorrent(t.Torrent.Name);
                                 <li horizontal style="grid-template-columns: 1fr auto">
                                     <section vertical>
-                                        <b>@t.Torrent?.Name</b>
+                                        <b>@detailedInfo.CleanName</b>
                                         <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State)?.ToLowerInvariant()</aside>
                                         <progress max='100' value=@t.Progress></progress>
+                                        @if (detailedInfo.Tags.Any())
+                                        {
+                                            <ul class="tags">
+                                                @foreach (var tag in detailedInfo.Tags)
+                                                {
+                                                    <li>@tag</li>
+                                                }
+                                            </ul>
+                                        }
                                     </section>
                                     <button @onclick="@(() => Torrents.Remove(t))">✕</button>
                                 </li>
                             }
                             else
                             {
+                                var detailedInfo = DetailedInfo.GetFromTorrent(t.MagnetLink.Name);
                                 <li>
-                                    <aside style="color: var(--accent-color)">incoming transmission @(string.IsNullOrEmpty(t.MagnetLink.Name) == false ? $"for {t.MagnetLink.Name}" : "") ...</aside>
+                                    <aside style="color: var(--accent-color)">incoming transmission @(string.IsNullOrEmpty(t.MagnetLink.Name) == false ? $"for {detailedInfo.CleanName}" : "") ...</aside>
+                                    @if (detailedInfo.Tags.Any())
+                                    {
+                                        <ul class="tags">
+                                            @foreach (var tag in detailedInfo.Tags)
+                                            {
+                                                <li>@tag</li>
+                                            }
+                                        </ul>
+                                    }
                                 </li>
                             }
                         }
@@ -71,15 +93,64 @@
             torrents = Torrents.GetAllTorrents();
             InvokeAsync(() => StateHasChanged());
         };
+
         return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine("checking for filehandling");
+            var module = await js.InvokeAsync<IJSObjectReference>("import", "/Components/Pages/Index.razor.js?" + Random.Shared.NextInt64());
+            var supported = await module.InvokeAsync<bool>("setupFileProcessing", Assembly.GetExecutingAssembly().GetName().Name);
+            if (supported)
+            {
+                Console.WriteLine("file handling supported");
+            }
+        }
+    }
+
+    [JSInvokable]
+    public static async Task ProcessFile(string filename, byte[] bytes)
+    {
+        Services.Torrents.Add(filename, bytes);
     }
 
     async Task AddMagnet()
     {
         var magnet = await js.InvokeAsync<string>("prompt", "add magnet uri");
-        if(magnet != null)
+        if (magnet != null)
         {
             await Torrents.Add(MagnetLink.Parse(magnet));
         }
+    }
+
+    record DetailedInfo(string CleanName, string[] Tags)
+    {
+        public static DetailedInfo GetFromTorrent(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return new("", []);
+            }
+            var segments = name.Split((char[])[' ', '.'], StringSplitOptions.RemoveEmptyEntries).ToList();
+            string[] tagsToFind = ["4k", "2160p", "1080p", "HDR"];
+            List<string> tags = new();
+            List<string> clean = new();
+            foreach (var segment in segments)
+            {
+                foreach (var tag in TagMapping(segment))
+                {
+                    tags.Add(tag);
+                }
+                if (tags.Any() == false)
+                {
+                    clean.Add(segment);
+                }
+            }
+            return new(CleanName: string.Join(" ", clean), tags.ToArray());
+        }
+
     }
 }

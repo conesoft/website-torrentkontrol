@@ -10,7 +10,7 @@ builder.Configuration.AddHostConfiguration();
 
 builder.Services
 
-    .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public", @"D:\Private"))
+    .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public"))
     .AddSingleton<Notification>()
 
     .AddSingleton<Torrents>()
