@@ -1,0 +1,44 @@
+﻿@layer reset {
+
+    :is(*, :after, :before) {
+        margin: 0;
+        padding: 0;
+        line-height: 100%;
+        box-sizing: border-box;
+        place-content: center start;
+        outline: none;
+        border: none;
+
+        &:empty {
+            place-self: center start;
+        }
+    }
+
+    a {
+        text-decoration-color: transparent;
+    }
+
+    li {
+        list-style-type: none;
+    }
+
+    input,
+    button {
+        font-family: inherit;
+        font-size: inherit;
+        border: inherit;
+    }
+
+    progress {
+        pointer-events: none;
+    }
+
+    img[src$="icon.svg"] {
+        width: 1rem;
+        -place-self: center;
+    }
+
+    script, style, head, meta, base, title, link {
+        display: none !important;
+    }
+}

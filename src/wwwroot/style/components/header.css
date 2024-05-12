@@ -1,0 +1,50 @@
+﻿@layer components.header {
+
+    body>header {
+        font-size: 2rem;
+        padding-inline: 1rem;
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-columns: min-content 1fr;
+        gap: 1rem;
+
+        &>nav {
+            display: flex;
+            gap: 0 1rem;
+            flex-wrap: wrap;
+            overflow: hidden;
+        }
+
+        & a {
+            line-height: 2rem;
+            color: oklab(from var(--color) l a b / 0.4);
+            overflow: hidden;
+            text-overflow: clip;
+
+            &:hover {
+                color: oklab(from var(--color) l a b / 0.8);
+                overflow: visible;
+            }
+
+            &:focus-visible {
+                box-shadow: 0 0 1rem var(--accent-color);
+                padding-inline: 0.5rem;
+                margin-inline: -0.5rem;
+                color: var(--color);
+                overflow: visible;
+            }
+
+            &[aria-current="page"], &:first-of-type {
+                color: oklab(from var(--accent-color) l a b / 0.8);
+
+                &:hover {
+                    color: oklab(from var(--accent-color) l a b / 1);
+                }
+
+                &:focus-visible {
+                    color: var(--color);
+                }
+            }
+        }
+    }
+}

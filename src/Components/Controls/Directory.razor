@@ -1,0 +1,37 @@
+﻿@using Conesoft.Blazor.Components.Interfaces
+
+@inject IJSRuntime JsRuntime
+@inject ICleanNameGenerator cleanName
+
+@code {
+    [Parameter] public Conesoft.Files.Directory Current { get; set; } = Conesoft.Files.Directory.Invalid;
+    [Parameter] public string Path { get; set; } = "";
+
+    private string CurrentPath => $"{Path}/{Current.Name}";
+    private string CurrentPathForDownload => $"*/{(CurrentPath.StartsWith("/") ? CurrentPath[1..] : CurrentPath)}";
+}
+
+<li class="directory">
+    <img class="icon" src="/folder-icon.svg" />
+    <a class="name" href="https://files.conesoft.net/@CurrentPath" target="_blank" title="@Current.Name">@cleanName.GenerateCleanNameFromString(Current.Name)</a>
+    <TagList SourceForTags="@Current.Name" />
+    <menu>
+        <li>
+            download <a href="https://files.conesoft.net/@CurrentPathForDownload" download="">▼</a>
+        </li>
+        <li dangerous>
+            delete <a @onclick="@DeleteFolder" @onclick:preventDefault=true @onclick:stopPropagation=true>✕</a>
+        </li>
+    </menu>
+</li>
+
+@code {
+    public async Task DeleteFolder()
+    {
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Are you sure?\n{Current.Path}");
+        if (confirmed)
+        {
+            Current.Delete();
+        }
+    }
+}

@@ -1,0 +1,20 @@
+﻿@layer components.buttoninput {
+
+    button, input {
+        --button-color: var(--accent-color);
+
+        background-color: var(--background-color-80);
+        color: var(--button-color);
+
+        &:hover:not(:disabled) {
+            background: var(--button-color);
+            color: var(--color);
+        }
+
+        &:focus-visible {
+            transition-duration: 0s;
+            color: var(--color);
+            background-color: var(--accent-color-75);
+        }
+    }
+}

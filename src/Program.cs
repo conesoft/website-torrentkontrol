@@ -1,4 +1,5 @@
-﻿using Conesoft.Hosting;
+﻿using Conesoft.Blazor.Components.Interfaces;
+using Conesoft.Hosting;
 using Conesoft.Users;
 using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Helpers;
@@ -15,6 +16,10 @@ builder.Services
 
     .AddSingleton<Torrents>()
     .AddHostedService(s => s.GetRequiredService<Torrents>())
+
+    .AddSingleton<TorrentNamingHelper>()
+    .AddTransient<ITagListGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
+    .AddTransient<ICleanNameGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
     
     .AddHttpClient()
     .AddAntiforgery()

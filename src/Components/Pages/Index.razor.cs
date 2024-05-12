@@ -8,13 +8,16 @@ public partial class Index
         if (ExtractTVEpisode(tag) is TvShowEpisode episode)
         {
             yield return $"Season {episode.Season}";
-            yield return $"Episode {episode.Episode}";
+            if(episode.Episode != null)
+            {
+                yield return $"Episode {episode.Episode}";
+            }
         }
-        if(tag.Contains("264") || tag.Contains("AVC"))
+        if (tag.Contains("264") || tag.Contains("AVC"))
         {
             yield return "H.264";
         }
-        if(tag.Contains("265") || tag.Contains("HEVC"))
+        if (tag.Contains("265") || tag.Contains("HEVC"))
         {
             yield return "H.265";
         }
@@ -32,16 +35,24 @@ public partial class Index
         }
     }
 
-    record TvShowEpisode(int Season, int Episode);
+    record TvShowEpisode(int Season, int? Episode);
     static TvShowEpisode? ExtractTVEpisode(string tag)
     {
         var regex = ParseSeasonAndEpisode();
         var match = regex.Match(tag.ToUpper());
 
-        return match.Success ? new(
+        if (match.Success)
+        {
+            return new(
                 Season: int.Parse(match.Groups["Season"].Value),
                 Episode: int.Parse(match.Groups["Episode"].Value)
-            ) : null;
+            );
+        }
+        if(tag.Length > 1 && (tag[0] == 's' || tag[0] == 'S'))
+        {
+            return int.TryParse(tag[1..], out var season) ? new(Season: season, Episode: null) : null;
+        }
+        return null;
     }
 
     [GeneratedRegex(@"S(?<Season>\d{1,2})E(?<Episode>\d{1,2})")]

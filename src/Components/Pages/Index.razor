@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Conesoft.Website.TorrentKontrol.Components.Controls
+@using Conesoft.Blazor.Components.Interfaces
 @using MonoTorrent
 @using System.Reflection
 @using System.Text.RegularExpressions
@@ -8,15 +9,19 @@
 
 @inject Services.Torrents Torrents
 @inject IJSRuntime js
+@inject ICleanNameGenerator cleanName
 
 <CascadingAuthenticationState>
     <UserHeaderNav>
-        <NavLink Match=NavLinkMatch.All href="/">⌂ torrentkontrol</NavLink>
-        <AuthorizeView>
-            <Authorized>
-                <UnblockedLink />
-            </Authorized>
-        </AuthorizeView>
+        <HomeButtonContent>⌂</HomeButtonContent>
+        <NavContent>
+            <NavLink Match=NavLinkMatch.All href="/">torrentkontrol</NavLink>
+            <AuthorizeView>
+                <Authorized>
+                    <UnblockedLink />
+                </Authorized>
+            </AuthorizeView>
+        </NavContent>
     </UserHeaderNav>
     <main>
         <AuthorizeView>
@@ -25,61 +30,76 @@
                     <button @onclick="AddMagnet">add magnet</button>
                 </section>
                 <section>
-                    <ul id="torrents">
-                        @if (torrents.Any() == false)
-                        {
-                            <li>
-                                <aside style="color: var(--color-50)">no active torrent yet ... :(</aside>
-                            </li>
-                        }
-                        @foreach (var t in torrents)
-                        {
-                            @if (t.Torrent?.Size > 0)
+                    @if (torrents.Any() == false)
+                    {
+                        <aside class="torrent empty">no active torrent yet ... :(</aside>
+                    }
+                    else
+                    {
+                        <ul id="torrents">
+                            @foreach (var t in torrents)
                             {
-                                var detailedInfo = DetailedInfo.GetFromTorrent(t.Torrent.Name);
-                                <li horizontal style="grid-template-columns: 1fr auto">
-                                    <section vertical>
-                                        <b>@detailedInfo.CleanName</b>
+                                @if (t.Torrent?.Size > 0)
+                                {
+                                    <li class="torrent downloading" style="grid-template-columns: 1fr auto">
+                                        <b>@cleanName.GenerateCleanNameFromString(t.Torrent.Name)</b>
                                         <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State)?.ToLowerInvariant()</aside>
                                         <progress max='100' value=@t.Progress></progress>
-                                        @if (detailedInfo.Tags.Any())
-                                        {
-                                            <ul class="tags">
-                                                @foreach (var tag in detailedInfo.Tags)
-                                                {
-                                                    <li>@tag</li>
-                                                }
-                                            </ul>
-                                        }
-                                    </section>
-                                    <button @onclick="@(() => Torrents.Remove(t))">✕</button>
-                                </li>
+                                        <TagList SourceForTags="@t.Torrent?.Name" />
+                                        <button dangerous @onclick="@(() => Torrents.Remove(t))">✕</button>
+                                    </li>
+                                }
+                                else
+                                {
+                                    var cleanedName = cleanName.GenerateCleanNameFromString(t.MagnetLink.Name);
+                                    <li class="torrent incoming">
+                                        <aside>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</aside>
+                                        <TagList SourceForTags="@t.MagnetLink.Name" />
+                                    </li>
+                                }
                             }
-                            else
-                            {
-                                var detailedInfo = DetailedInfo.GetFromTorrent(t.MagnetLink.Name);
-                                <li>
-                                    <aside style="color: var(--accent-color)">incoming transmission @(string.IsNullOrEmpty(t.MagnetLink.Name) == false ? $"for {detailedInfo.CleanName}" : "") ...</aside>
-                                    @if (detailedInfo.Tags.Any())
-                                    {
-                                        <ul class="tags">
-                                            @foreach (var tag in detailedInfo.Tags)
-                                            {
-                                                <li>@tag</li>
-                                            }
-                                        </ul>
-                                    }
-                                </li>
-                            }
-                        }
+                        </ul>
+                    }
+                </section>
+                @* <section>
+                    <ul>
+                        <li class="torrent downloading">
+                            <progress max='100' value=50></progress>
+                            <section>
+                                <b>Fancy Torrent Name Here</b>
+                                <aside>size: 10GB, 50%, speed: 10MB/s downloading</aside>
+                                <TagList SourceForTags="Fancy Torrent Name Here 1080p S01E01" />
+                            </section>
+                            <button dangerous>✕</button>
+                        </li>
+                        <li class="torrent downloading">
+                            <progress max='100' value=5></progress>
+                            <section>
+                                <b>Fancy Torrent Name Here</b>
+                                <aside>size: 10GB, 5%, speed: 10MB/s downloading</aside>
+                                <TagList SourceForTags="Fancy Torrent Name Here  1080p S01E01" />
+                            </section>
+                            <button dangerous>✕</button>
+                        </li>
+                        <li class="torrent downloading">
+                            <progress max='100' value=95></progress>
+                            <section>
+                                <b>Fancy Torrent Name Here</b>
+                                <aside>size: 10GB, 95%, speed: 10MB/s downloading</aside>
+                                <TagList SourceForTags="Fancy Torrent Name Here" />
+                            </section>
+                            <button dangerous>✕</button>
+                        </li>
+                        <li class="torrent incoming">
+                            <aside>incoming transmission for 'Fancy Magnet Name Here' &hellip;</aside>
+                            <TagList SourceForTags="Fancy Torrent Name Here" />
+                        </li>
                     </ul>
-                </section>
-                <section>
-                </section>
+                </section> *@
             </Authorized>
         </AuthorizeView>
 
-        <Conesoft.Blazor.Components.Controls.DirectoryListing Path="Downloads/Torrents" />
+        <DirectoryListing Path="Downloads/Torrents" />
     </main>
 </CascadingAuthenticationState>
 
@@ -114,7 +134,8 @@
     [JSInvokable]
     public static async Task ProcessFile(string filename, byte[] bytes)
     {
-        Services.Torrents.Add(filename, bytes);
+        var _ = Services.Torrents.Add(filename, bytes);
+        await Task.CompletedTask;
     }
 
     async Task AddMagnet()
@@ -124,33 +145,5 @@
         {
             await Torrents.Add(MagnetLink.Parse(magnet));
         }
-    }
-
-    record DetailedInfo(string CleanName, string[] Tags)
-    {
-        public static DetailedInfo GetFromTorrent(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return new("", []);
-            }
-            var segments = name.Split((char[])[' ', '.'], StringSplitOptions.RemoveEmptyEntries).ToList();
-            string[] tagsToFind = ["4k", "2160p", "1080p", "HDR"];
-            List<string> tags = new();
-            List<string> clean = new();
-            foreach (var segment in segments)
-            {
-                foreach (var tag in TagMapping(segment))
-                {
-                    tags.Add(tag);
-                }
-                if (tags.Any() == false)
-                {
-                    clean.Add(segment);
-                }
-            }
-            return new(CleanName: string.Join(" ", clean), tags.ToArray());
-        }
-
     }
 }

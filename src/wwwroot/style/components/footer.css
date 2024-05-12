@@ -1,0 +1,22 @@
+﻿@layer components.footer {
+
+    body>footer {
+        display: grid;
+    }
+
+    @media(min-width: 120ch) {
+        body>footer {
+            display: flex;
+            gap: 0 2ch;
+
+            & * {
+                text-wrap: nowrap;
+            }
+
+            &>*:last-of-type {
+                flex: 1;
+                text-align: right;
+            }
+        }
+    }
+}

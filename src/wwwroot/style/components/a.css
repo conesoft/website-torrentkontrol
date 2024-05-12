@@ -1,0 +1,27 @@
+@layer components.a {
+    a:focus-visible {
+        transition-duration: 0s;
+        background-color: var(--accent-color-50);
+    }
+
+    li:has(a) {
+        position: relative;
+
+        & a:after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        & a:focus-visible {
+            background-color: initial;
+        }
+
+        &:has(:focus-visible) {
+            transition-duration: 0s;
+            background-color: var(--accent-color-75);
+            box-shadow: 0 0 1rem var(--accent-color-75);
+        }
+    }
+}

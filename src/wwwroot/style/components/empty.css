@@ -1,0 +1,6 @@
+@layer components.empty {
+    
+    *:not(:has(*)) {
+        display: initial;
+    }
+}

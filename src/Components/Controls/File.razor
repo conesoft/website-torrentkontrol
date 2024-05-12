@@ -1,0 +1,33 @@
+﻿@using System.Reflection
+@using TypeRenderers
+
+@code {
+    [Parameter] public Conesoft.Files.File Current { get; set; } = Conesoft.Files.Directory.Invalid.AsFile;
+    [Parameter] public string Path { get; set; } = "";
+
+    string CleanUp(string extension)
+    {
+        extension = extension.Replace(".", "");
+        extension = char.ToUpper(extension[0]) + extension[1..];
+        return extension;
+    }
+}
+
+@{
+    var types = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.Name.EndsWith("TypeRenderer"));
+
+    var type = types.FirstOrDefault(
+        t => (Activator.CreateInstance(t) as DefaultTypeRenderer)!.Extensions.Contains(Current.Extension.ToLower()[1..]),
+        typeof(DefaultTypeRenderer)
+    );
+    // var type = Type.GetType($"Conesoft.Website.Files.Components.Controls.TypeRenderers.{CleanUp(Current.Extension)}FileRenderer")
+    //     ?? typeof(Controls.TypeRenderers.DefaultTypeRenderer);
+
+    var parameters = new Dictionary<string, object>
+            {
+                ["Current"] = Current,
+                ["Path"] = Path
+            };
+}
+
+<DynamicComponent Type="@type" Parameters="@parameters" />

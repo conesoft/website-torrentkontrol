@@ -1,0 +1,26 @@
+﻿@using FileRenderers
+@inherits DefaultTypeRenderer
+
+@code {
+    public override string[] Extensions => ["jpg", "png"];
+
+    string CleanUp(string extension)
+    {
+        extension = extension.Replace(".", "");
+        extension = char.ToUpper(extension[0]) + extension[1..];
+        return extension;
+    }
+}
+
+@{
+    var type = Type.GetType($"FileRenderers.{CleanUp(Current.Extension)}FileRenderer")
+        ?? typeof(Controls.FileRenderers.DefaultFileRenderer);
+
+    var parameters = new Dictionary<string, object>
+            {
+                ["Current"] = Current,
+                ["Path"] = Path
+            };
+}
+
+<DynamicComponent Type="@type" Parameters="@parameters" />

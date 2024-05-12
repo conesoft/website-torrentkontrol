@@ -1,0 +1,118 @@
+﻿@layer theme {
+    html {
+        font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+        font-size: 1.5rem;
+        color-scheme: dark light;
+        background-color: var(--background-color);
+        color: var(--color);
+        caret-color: var(--accent-color);
+    }
+
+    body {
+        background-color: var(--accent-color-50);
+
+        &> :is(header, footer, main > *) {
+            background: var(--background-color);
+        }
+    }
+
+    body > footer, body > footer * {
+        color: var(--color-70);
+    }
+
+    a {
+        color: var(--color);
+    }
+
+    [dangerous] {
+        --accent-color: var(--danger-color);
+    }
+
+    ul>li {
+        background-color: var(--background-color);
+
+        &:nth-of-type(2n) {
+            background-color: var(--background-color-80);
+        }
+    }
+
+    section>header {
+        background-color: var(--accent-color);
+        color: var(--background-color);
+        font-weight: bold;
+    }
+
+    @layer animation {
+        * {
+            transition: all 0.33s linear;
+        }
+
+        body:has(:hover) {
+            overflow-x: hidden;
+        }
+
+        button:hover {
+            scale: 1.005;
+            z-index: 1;
+        }
+
+        ul>li {
+            transition: all 0.33s linear, box-shadow 0.125s linear, scale 0.125s linear;
+
+            &:hover, &:focus-within {
+                box-shadow: 0 0 12rem rgba(0, 0, 0, 0.25), 0 0 1rem rgba(0, 0, 0, 0.75);
+                scale: 1.005;
+                z-index: 1;
+            }
+        }
+    }
+
+    @layer glow {
+        :is(button, input):hover,
+        :is(button, input):focus-visible {
+            box-shadow: 0 0 1rem var(--button-color);
+        }
+    }
+
+    @layer shadow {
+        body>main {
+            filter: drop-shadow(0 0 1rem black);
+        }
+    }
+
+    @layer browser.webkit {
+        ::-webkit-scrollbar {
+            width: 0.5rem;
+            background-color: transparent;
+
+            & * {
+                background-color: transparent;
+            }
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--accent-color-75);
+            border: 0.125rem solid transparent;
+            background-clip: padding-box;
+            border-radius: 1rem;
+            box-shadow: 0 0 5rem var(--accent-color);
+        }
+
+        progress {
+            color: var(--accent-color);
+            width: 100%;
+            height: 100%;
+            appearance: none;
+            
+            &::-webkit-progress-bar {
+                background-color: transparent;
+            }
+        
+            &::-webkit-progress-value {
+                background: currentColor;
+                box-shadow: 0 0 1rem currentColor;
+                transition: 1s;
+            }
+        }
+    }
+}

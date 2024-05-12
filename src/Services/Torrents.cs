@@ -138,6 +138,13 @@ namespace Conesoft.Website.TorrentKontrol.Services
                 }
             }
 
+            await clientEngine.UpdateSettingsAsync(new EngineSettingsBuilder(clientEngine.Settings)
+            {
+                AllowLocalPeerDiscovery = false,
+                MaximumConnections = 150,
+                MaximumHalfOpenConnections = 8
+            }.ToSettings());
+
             await clientEngine.StartAllAsync();
 
             clientEngine.CriticalException += Engine_CriticalException;
