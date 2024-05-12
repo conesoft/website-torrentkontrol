@@ -55,8 +55,10 @@
                                 {
                                     var cleanedName = cleanName.GenerateCleanNameFromString(t.MagnetLink.Name);
                                     <li class="torrent incoming">
-                                        <aside>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</aside>
-                                        <TagList SourceForTags="@t.MagnetLink.Name" />
+                                        <section>
+                                            <aside>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</aside>
+                                            <TagList SourceForTags="@t.MagnetLink.Name" />
+                                        </section>           
                                     </li>
                                 }
                             }
