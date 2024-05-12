@@ -41,11 +41,13 @@
                             {
                                 @if (t.Torrent?.Size > 0)
                                 {
-                                    <li class="torrent downloading" style="grid-template-columns: 1fr auto">
-                                        <b>@cleanName.GenerateCleanNameFromString(t.Torrent.Name)</b>
-                                        <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State)?.ToLowerInvariant()</aside>
+                                    <li class="torrent downloading">
                                         <progress max='100' value=@t.Progress></progress>
-                                        <TagList SourceForTags="@t.Torrent?.Name" />
+                                        <section>
+                                            <b>@cleanName.GenerateCleanNameFromString(t.Torrent.Name)</b>
+                                            <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State)?.ToLowerInvariant()</aside>
+                                            <TagList SourceForTags="@t.Torrent?.Name" />
+                                        </section>
                                         <button dangerous @onclick="@(() => Torrents.Remove(t))">✕</button>
                                     </li>
                                 }
@@ -62,39 +64,39 @@
                     }
                 </section>
                 @* <section>
-                    <ul>
-                        <li class="torrent downloading">
-                            <progress max='100' value=50></progress>
-                            <section>
-                                <b>Fancy Torrent Name Here</b>
-                                <aside>size: 10GB, 50%, speed: 10MB/s downloading</aside>
-                                <TagList SourceForTags="Fancy Torrent Name Here 1080p S01E01" />
-                            </section>
-                            <button dangerous>✕</button>
-                        </li>
-                        <li class="torrent downloading">
-                            <progress max='100' value=5></progress>
-                            <section>
-                                <b>Fancy Torrent Name Here</b>
-                                <aside>size: 10GB, 5%, speed: 10MB/s downloading</aside>
-                                <TagList SourceForTags="Fancy Torrent Name Here  1080p S01E01" />
-                            </section>
-                            <button dangerous>✕</button>
-                        </li>
-                        <li class="torrent downloading">
-                            <progress max='100' value=95></progress>
-                            <section>
-                                <b>Fancy Torrent Name Here</b>
-                                <aside>size: 10GB, 95%, speed: 10MB/s downloading</aside>
-                                <TagList SourceForTags="Fancy Torrent Name Here" />
-                            </section>
-                            <button dangerous>✕</button>
-                        </li>
-                        <li class="torrent incoming">
-                            <aside>incoming transmission for 'Fancy Magnet Name Here' &hellip;</aside>
-                            <TagList SourceForTags="Fancy Torrent Name Here" />
-                        </li>
-                    </ul>
+                <ul>
+                <li class="torrent downloading">
+                <progress max='100' value=50></progress>
+                <section>
+                <b>Fancy Torrent Name Here</b>
+                <aside>size: 10GB, 50%, speed: 10MB/s downloading</aside>
+                <TagList SourceForTags="Fancy Torrent Name Here 1080p S01E01" />
+                </section>
+                <button dangerous>✕</button>
+                </li>
+                <li class="torrent downloading">
+                <progress max='100' value=5></progress>
+                <section>
+                <b>Fancy Torrent Name Here</b>
+                <aside>size: 10GB, 5%, speed: 10MB/s downloading</aside>
+                <TagList SourceForTags="Fancy Torrent Name Here  1080p S01E01" />
+                </section>
+                <button dangerous>✕</button>
+                </li>
+                <li class="torrent downloading">
+                <progress max='100' value=95></progress>
+                <section>
+                <b>Fancy Torrent Name Here</b>
+                <aside>size: 10GB, 95%, speed: 10MB/s downloading</aside>
+                <TagList SourceForTags="Fancy Torrent Name Here" />
+                </section>
+                <button dangerous>✕</button>
+                </li>
+                <li class="torrent incoming">
+                <aside>incoming transmission for 'Fancy Magnet Name Here' &hellip;</aside>
+                <TagList SourceForTags="Fancy Torrent Name Here" />
+                </li>
+                </ul>
                 </section> *@
             </Authorized>
         </AuthorizeView>

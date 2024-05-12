@@ -10,7 +10,15 @@
 
 <CascadingAuthenticationState>
     <UserHeaderNav>
-        <NavLink Match=NavLinkMatch.All href="/">⌂ torrentkontrol</NavLink>
+        <HomeButtonContent>⌂</HomeButtonContent>
+        <NavContent>
+            <NavLink Match=NavLinkMatch.All href="/">torrentkontrol</NavLink>
+            <AuthorizeView>
+                <Authorized>
+                    <UnblockedLink />
+                </Authorized>
+            </AuthorizeView>
+        </NavContent>
     </UserHeaderNav>
     <main>
         <UserLogin />
