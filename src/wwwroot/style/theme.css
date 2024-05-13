@@ -46,6 +46,9 @@
         * {
             transition: all 0.33s linear;
         }
+        *:hover {
+            transition-duration: 0s;
+        }
 
         body:has(:hover) {
             overflow-x: hidden;
@@ -57,7 +60,7 @@
         }
 
         ul>li {
-            transition: all 0.33s linear, box-shadow 0.125s linear, scale 0.125s linear;
+            -transition: all 0.33s linear, box-shadow 0.125s linear, scale 0.125s linear;
 
             &:hover, &:focus-within {
                 box-shadow: 0 0 12rem rgba(0, 0, 0, 0.25), 0 0 1rem rgba(0, 0, 0, 0.75);
@@ -103,7 +106,7 @@
             width: 100%;
             height: 100%;
             appearance: none;
-            
+
             &::-webkit-progress-bar {
                 background-color: transparent;
             }
