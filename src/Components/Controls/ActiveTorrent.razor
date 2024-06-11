@@ -1,0 +1,40 @@
+﻿@using Conesoft.Blazor.Components.Interfaces
+@using Humanizer.Bytes
+@using MonoTorrent.Client
+
+@inject ICleanNameGenerator cleanName
+@inject Services.Torrents Torrents
+
+<li class="torrent" title="@Torrent.Torrent.Name">
+    <progress max='100' value=@Torrent.Progress></progress>
+    <section>
+        <b>@cleanedName</b>
+        @{
+            var size = Torrent.Torrent?.Size.Bytes() ?? new();
+            var speed = Torrent.Monitor?.DownloadSpeed.Bytes() ?? new();
+        }
+        <aside class="size">
+            <b>@Math.Round(size.LargestWholeNumberValue, 1)</b>@size.LargestWholeNumberSymbol
+        </aside>
+        <aside class="percentage">
+            <b>@Math.Round(Torrent.Progress, 1)</b>%
+        </aside>
+        <aside class="speed">
+            <b>@Math.Round(speed.LargestWholeNumberValue, 1)</b>@speed.LargestWholeNumberSymbol/s
+        </aside>
+        <TagList SourceForTags="@Torrent.Torrent?.Name" />
+    </section>
+    <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+</li>
+
+@code {
+    [Parameter]
+    public TorrentManager Torrent { get; set; }
+
+    string cleanedName = "";
+
+    protected override void OnParametersSet()
+    {
+        this.cleanedName = cleanName.GenerateCleanNameFromString(Torrent.Torrent.Name);
+    }
+}

@@ -16,6 +16,7 @@
             @if (Roots.Where(r => r.Exists).SelectMany(d => d.Directories).Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false).Any())
             {
                 <section>
+                    <header>Directories</header>
                     <ul>
                         @foreach (var directory in Roots
                             .Where(r => r.Exists)

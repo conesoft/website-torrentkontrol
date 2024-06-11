@@ -1,0 +1,25 @@
+﻿@using Conesoft.Blazor.Components.Interfaces
+@using MonoTorrent.Client
+
+@inject ICleanNameGenerator cleanName
+@inject Services.Torrents Torrents
+
+<li class="torrent" title="@Torrent.MagnetLink.Name">
+    <section>
+        <aside>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</aside>
+        <TagList SourceForTags="@Torrent.MagnetLink.Name" />
+    </section>
+    <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+</li>
+
+@code {
+    [Parameter]
+    public TorrentManager Torrent { get; set; }
+
+    string cleanedName = "";
+
+    protected override void OnParametersSet()
+    {
+        this.cleanedName = cleanName.GenerateCleanNameFromString(Torrent.MagnetLink.Name);
+    }
+}

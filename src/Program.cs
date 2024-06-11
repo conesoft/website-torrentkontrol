@@ -10,6 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddHostConfiguration();
 
 builder.Services
+    .AddLoggingToHost()
+    .AddPeriodicGarbageCollection(TimeSpan.FromMinutes(5))
 
     .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public"))
     .AddSingleton<Notification>()

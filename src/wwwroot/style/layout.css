@@ -58,6 +58,7 @@
 
             &>ul>li {
                 min-height: 2rem;
+                padding-block: 0.5rem;
 
                 &>* {
                     grid-column: span 1;

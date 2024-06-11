@@ -59,6 +59,8 @@
 
     body>footer {
         display: grid;
+        overflow-y: hidden;
+        min-height: 1rem;
     }
 
     @media(min-width: 120ch) {
@@ -133,7 +135,7 @@
         gap: 0.5rem 1ch;
 
         flex-wrap: wrap;
-        padding-block: 0.5rem;
+        height: 1rem;
 
         overflow-y: hidden;
 
@@ -217,6 +219,7 @@
 
             &>ul>li {
                 min-height: 2rem;
+                padding-block: 0.5rem;
 
                 &>* {
                     grid-column: span 1;
@@ -262,7 +265,6 @@
 
     img[src$="icon.svg"] {
         width: 1rem;
-        -place-self: center;
     }
 
     script, style, head, meta, base, title, link {

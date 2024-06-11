@@ -29,77 +29,43 @@
                 <section>
                     <button @onclick="AddMagnet">add magnet</button>
                 </section>
-                <section>
-                    @if (torrents.Any() == false)
-                    {
+                @if (torrents.Any() == false)
+                {
+                    <section>
                         <aside class="torrent empty">no active torrent yet ... :(</aside>
-                    }
-                    else
+                    </section>
+                }
+                else
+                {
+                    var incoming = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Metadata);
+                    var downloading = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Downloading);
+
+                    if (incoming.Any())
                     {
-                        <ul id="torrents">
-                            @foreach (var t in torrents)
-                            {
-                                @if (t.Torrent?.Size > 0)
+                        <section>
+                            <header>Incoming</header>
+                            <ul class="incoming">
+                                @foreach (var t in incoming)
                                 {
-                                    <li class="torrent downloading">
-                                        <progress max='100' value=@t.Progress></progress>
-                                        <section>
-                                            <b>@cleanName.GenerateCleanNameFromString(t.Torrent.Name)</b>
-                                            <aside>size: @t.Torrent?.Size.Bytes(), @Math.Round(t.Progress, 2)%, speed: @t.Monitor?.DownloadSpeed.Bytes()/s @Enum.GetName(t.State)?.ToLowerInvariant()</aside>
-                                            <TagList SourceForTags="@t.Torrent?.Name" />
-                                        </section>
-                                        <button dangerous @onclick="@(() => Torrents.Remove(t))">✕</button>
-                                    </li>
+                                    <IncomingTorrent @key=t Torrent=@t />
                                 }
-                                else
-                                {
-                                    var cleanedName = cleanName.GenerateCleanNameFromString(t.MagnetLink.Name);
-                                    <li class="torrent incoming">
-                                        <section>
-                                            <aside>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</aside>
-                                            <TagList SourceForTags="@t.MagnetLink.Name" />
-                                        </section>           
-                                    </li>
-                                }
-                            }
-                        </ul>
+                            </ul>
+                        </section>
                     }
-                </section>
-                @* <section>
-                <ul>
-                <li class="torrent downloading">
-                <progress max='100' value=50></progress>
-                <section>
-                <b>Fancy Torrent Name Here</b>
-                <aside>size: 10GB, 50%, speed: 10MB/s downloading</aside>
-                <TagList SourceForTags="Fancy Torrent Name Here 1080p S01E01" />
-                </section>
-                <button dangerous>✕</button>
-                </li>
-                <li class="torrent downloading">
-                <progress max='100' value=5></progress>
-                <section>
-                <b>Fancy Torrent Name Here</b>
-                <aside>size: 10GB, 5%, speed: 10MB/s downloading</aside>
-                <TagList SourceForTags="Fancy Torrent Name Here  1080p S01E01" />
-                </section>
-                <button dangerous>✕</button>
-                </li>
-                <li class="torrent downloading">
-                <progress max='100' value=95></progress>
-                <section>
-                <b>Fancy Torrent Name Here</b>
-                <aside>size: 10GB, 95%, speed: 10MB/s downloading</aside>
-                <TagList SourceForTags="Fancy Torrent Name Here" />
-                </section>
-                <button dangerous>✕</button>
-                </li>
-                <li class="torrent incoming">
-                <aside>incoming transmission for 'Fancy Magnet Name Here' &hellip;</aside>
-                <TagList SourceForTags="Fancy Torrent Name Here" />
-                </li>
-                </ul>
-                </section> *@
+
+                    if (downloading.Any())
+                    {
+                        <section>
+                            <header>Downloading</header>
+                            <ul class="downloading">
+                                @foreach (var t in downloading)
+                                {
+                                    <ActiveTorrent @key=t Torrent=@t />
+                                }
+                            </ul>
+                        </section>
+                    }
+                }
             </Authorized>
         </AuthorizeView>
 
