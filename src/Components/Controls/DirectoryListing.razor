@@ -15,16 +15,16 @@
         <Authorized>
             @if (Roots.Where(r => r.Exists).SelectMany(d => d.Directories).Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false).Any())
             {
-                <section>
+                <section style="view-transition-name: section-directories">
                     <header>Directories</header>
                     <ul>
                         @foreach (var directory in Roots
-                            .Where(r => r.Exists)
-                            .SelectMany(d => d.Directories)
-                            .Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)
-                            .OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer())
-                            .DistinctBy(d => d.Name)
-                        )
+                           .Where(r => r.Exists)
+                           .SelectMany(d => d.Directories)
+                           .Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)
+                           .OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer())
+                           .DistinctBy(d => d.Name)
+                       )
                         {
                             <Directory Path="@Path" Current="@directory" />
                         }
@@ -35,8 +35,9 @@
             {
                 @foreach (var group in GroupedFiles(Roots.Where(r => r.Exists).SelectMany(d => d.Files).Where(f => f.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)))
                 {
-                    <section>
-                        <header>@group.Key.Name.Replace("TypeRenderer", "").Replace("Default", "Files")</header>
+                    var name = group.Key.Name.Replace("TypeRenderer", "").Replace("Default", "Files");
+                    <section style=@($"view-transition-name: section-{name}-files")>
+                        <header>@name</header>
                         <ul>
                             @foreach (var file in group.OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer()))
                             {

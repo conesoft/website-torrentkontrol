@@ -1,23 +1,36 @@
 ﻿using Conesoft.Blazor.Components.Interfaces;
 using Conesoft.Hosting;
 using Conesoft.Website.TorrentKontrol.Components;
+using Conesoft.Website.TorrentKontrol.Configuration;
 using Conesoft.Website.TorrentKontrol.Helpers;
 using Conesoft.Website.TorrentKontrol.Services;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder
-    .AddHostConfigurationFiles(legacyMode: true)
+    .AddHostConfigurationFiles(configurator =>
+    {
+        configurator.Add<Config>();
+    })
     .AddUsersWithStorage()
     .AddHostEnvironmentInfo()
     .AddLoggingService()
+    .AddNotificationService()
     ;
+
+builder.Services.AddViewTransition();
+
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("noredirect").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+{
+    AllowAutoRedirect = false
+});
 
 builder.Services
     .AddCompiledHashCacheBuster()
 
     .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public"))
-    .AddSingleton<Notification>()
 
     .AddSingleton<Torrents>().AsHostedService<Torrents>()
 

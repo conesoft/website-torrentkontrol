@@ -1,5 +1,9 @@
-﻿@inject Hosting.HostEnvironment environment
-@inject IOptions<Config> config
+﻿@using TorrentKontrol.Configuration
+
+@inject Hosting.HostEnvironment environment
+@inject IOptionsSnapshot<Config> config
+@inject Hosting.LocalSettings localSettings
+@inject IHttpClientFactory httpClientFactory
 
 @rendermode InteractiveServer
 
@@ -21,7 +25,7 @@
             linksrequest = Task.WhenAll(
                 Task.Run(async () =>
                 {
-                    using var http = new HttpClient(new HttpClientHandler() { AllowAutoRedirect = false });
+                    using var http = httpClientFactory.CreateClient("noredirect");
                     var changes = false;
                     links = await Task.WhenAll(links.Select(async link =>
                     {
@@ -39,14 +43,11 @@
                     StateHasChanged();
                     if (changes)
                     {
-                        await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config.Value with { Links = links });
+                        await localSettings.Save(config.Value with { Links = links });
                     }
                 }),
                 Task.Delay(TimeSpan.FromDays(1))
             );
         }
     }
-
-    record Link(string Url, string Name);
-    record Config(string DownloadUrl, Link[] Links);
 }
