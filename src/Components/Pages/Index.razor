@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Conesoft.Website.TorrentKontrol.Components.Controls
 @using Conesoft.Blazor.Components.Interfaces
+@using Conesoft.Blazor.Components
 @using MonoTorrent
 @using System.Reflection
 @using System.Text.RegularExpressions
@@ -104,7 +105,7 @@
     [JSInvokable]
     public static async Task ProcessFile(string filename, byte[] bytes)
     {
-        var _ = Services.Torrents.Add(filename, bytes);
+        var _ = Services.Torrents.Add(bytes);
         await Task.CompletedTask;
     }
 

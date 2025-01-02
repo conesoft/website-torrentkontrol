@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace Conesoft.Website.TorrentKontrol.Components.Pages;
 public partial class Index
 {
-    static IEnumerable<string> TagMapping(string tag)
+    private static IEnumerable<string> TagMapping(string tag)
     {
         if (ExtractTVEpisode(tag) is TvShowEpisode episode)
         {

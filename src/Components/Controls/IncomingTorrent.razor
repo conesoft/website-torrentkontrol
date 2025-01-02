@@ -14,12 +14,12 @@
 
 @code {
     [Parameter]
-    public TorrentManager Torrent { get; set; }
+    public TorrentManager Torrent { get; set; } = default!;
 
     string cleanedName = "";
 
     protected override void OnParametersSet()
     {
-        this.cleanedName = cleanName.GenerateCleanNameFromString(Torrent.MagnetLink.Name);
+        this.cleanedName = cleanName.GenerateCleanNameFromString(Torrent.MagnetLink?.Name ?? string.Empty);
     }
 }

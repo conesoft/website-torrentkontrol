@@ -16,6 +16,8 @@ main {
 
     ::deep .torrent section {
         grid-column: 2 / -2;
+        padding-block: 0.5rem;
+        gap: 0.5rem 1rem;
     }
 
         ::deep .torrent section > * {
@@ -53,8 +55,67 @@ main {
     }
 
     ::deep .torrent .tags {
+        grid-row: 1;
         grid-column: 6 / 8;
     }
+
+    @media (aspect-ratio < 1) {
+        ::deep .torrent section {
+            grid-template-columns: auto;
+            place-content: stretch;
+        }
+
+        ::deep .torrent b {
+            grid-column: 1 / span 3;
+        }
+
+        ::deep .torrent .size {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        ::deep .torrent .percentage {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        ::deep .torrent .speed {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        ::deep .torrent .tags {
+            grid-row: 3;
+            grid-column: span 3;
+        }
+
+        ::deep .directory {
+            grid-template-columns: 0 auto 1fr;
+            gap: 0 1rem;
+        }
+
+        ::deep .file {
+            grid-template-columns: 0 auto 1fr;
+            gap: 0 1rem;
+        }
+
+        ::deep .directory .tags {
+            display: none;
+        }
+
+        ::deep .file .tags {
+            display: none;
+        }
+
+        ::deep .file a {
+            text-wrap: nowrap;
+        }
+
+        ::deep .file .size {
+            display: none;
+        }
+    }
+
 
         ::deep .torrent .tags li {
             background-color: var(--accent-color);
@@ -110,4 +171,8 @@ main {
 
 ::deep .tags {
     place-self: center stretch;
+}
+
+::deep .icon {
+    place-self: center;
 }

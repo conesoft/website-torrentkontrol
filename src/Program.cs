@@ -1,23 +1,25 @@
 ﻿using Conesoft.Blazor.Components.Interfaces;
 using Conesoft.Hosting;
-using Conesoft.Users;
 using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Helpers;
 using Conesoft.Website.TorrentKontrol.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddHostConfiguration();
+builder
+    .AddHostConfigurationFiles(legacyMode: true)
+    .AddUsersWithStorage()
+    .AddHostEnvironmentInfo()
+    .AddLoggingService()
+    ;
 
 builder.Services
-    .AddLoggingToHost()
-    .AddPeriodicGarbageCollection(TimeSpan.FromMinutes(5))
+    .AddCompiledHashCacheBuster()
 
     .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public"))
     .AddSingleton<Notification>()
 
-    .AddSingleton<Torrents>()
-    .AddHostedService(s => s.GetRequiredService<Torrents>())
+    .AddSingleton<Torrents>().AsHostedService<Torrents>()
 
     .AddSingleton<TorrentNamingHelper>()
     .AddTransient<ITagListGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
@@ -26,19 +28,20 @@ builder.Services
     .AddHttpClient()
     .AddAntiforgery()
     .AddCascadingAuthenticationState()
-    .AddUsersWithStorage()
     .AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
 
 app
+    .UseCompiledHashCacheBuster()
     .UseDeveloperExceptionPage()
-    .UseHostingDefaults(useDefaultFiles: true, useStaticFiles: true)
     .UseRouting()
     .UseStaticFiles()
     .UseAntiforgery();
 
-app.MapUsers();
+app.MapStaticAssets();
+
+app.MapUsersWithStorage();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

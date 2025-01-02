@@ -1,4 +1,7 @@
-﻿@rendermode InteractiveServer
+﻿@inject Hosting.HostEnvironment environment
+@inject IOptions<Config> config
+
+@rendermode InteractiveServer
 
 @foreach(var link in links)
 {
@@ -11,12 +14,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var config = await Conesoft.Hosting.Host.LocalSettings.ReadFromJson<Config>();
-        if(config == null)
-        {
-            throw new FileNotFoundException("Configuration is Missing");
-        }
-        links = config.Links;
+        links = config.Value.Links;
 
         if (linksrequest.IsCompleted)
         {
@@ -41,7 +39,7 @@
                     StateHasChanged();
                     if (changes)
                     {
-                        await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config with { Links = links });
+                        await Conesoft.Hosting.Host.LocalSettings.WriteAsJson(config.Value with { Links = links });
                     }
                 }),
                 Task.Delay(TimeSpan.FromDays(1))

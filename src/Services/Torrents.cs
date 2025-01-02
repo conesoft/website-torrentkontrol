@@ -1,13 +1,14 @@
 ﻿using Conesoft.Files;
+using Conesoft.Hosting;
 using Microsoft.AspNetCore.Http.Extensions;
 using MonoTorrent;
 using MonoTorrent.Client;
 
 namespace Conesoft.Website.TorrentKontrol.Services
 {
-    public class Torrents : IHostedService
+    public class Torrents(IConfiguration configuration, HostEnvironment environment) : IHostedService
     {
-        record Engine(ClientEngine TorrentEngine, Conesoft.Files.Directory DownloadFolder, Conesoft.Files.File StateFile, string ConesoftSecret, CancellationTokenSource CancellationTokenSource);
+        record Engine(ClientEngine TorrentEngine, Files.Directory DownloadFolder, Files.File StateFile, string ConesoftSecret, CancellationTokenSource CancellationTokenSource);
 
         static Engine? engine;
 
@@ -67,7 +68,7 @@ namespace Conesoft.Website.TorrentKontrol.Services
             }
         }
 
-        public static async Task Add(string filename, byte[] torrentBytes)
+        public static async Task Add(byte[] torrentBytes)
         {
             if (engine != null)
             {
@@ -102,13 +103,12 @@ namespace Conesoft.Website.TorrentKontrol.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var configuration = new ConfigurationBuilder().AddJsonFile(Conesoft.Hosting.Host.GlobalSettings.Path).Build();
             var conesoftSecret = configuration["conesoft:secret"] ?? throw new Exception("Conesoft Secret not found in Configuration");
+            var config = configuration.Get<Config>() ?? throw new FileNotFoundException("Configuration not Found");
 
-            var config = await Hosting.Host.LocalSettings.ReadFromJson<Config>() ?? throw new FileNotFoundException("Configuration not Found");
-            var downloadFolder = Conesoft.Files.Directory.From(config.DownloadUrl);
+            var downloadFolder = Files.Directory.From(config.DownloadUrl);
 
-            var state = Hosting.Host.LocalStorage;
+            var state = environment.Local.Storage;
 
             var cache = state / "Cache";
             var stateFile = state / Filename.From("Torrents", "settings");
@@ -127,8 +127,6 @@ namespace Conesoft.Website.TorrentKontrol.Services
                     AutoSaveLoadDhtCache = true,
                     AutoSaveLoadFastResume = true,
                     AutoSaveLoadMagnetLinkMetadata = true,
-                    ListenPort = 55123,
-                    DhtPort = 55123,
                     CacheDirectory = cache.Path
                 }.ToSettings());
 
@@ -165,9 +163,9 @@ namespace Conesoft.Website.TorrentKontrol.Services
                                 await torrent.StopAsync();
                                 await clientEngine.RemoveAsync(torrent);
                                 await Notify(
-                                    title: $"{torrent.Torrent.Name} Finished",
-                                    message: $"The Torrent '{torrent.Torrent.Name}' successfully finished downloading",
-                                    url: $"https://files.conesoft.net/Downloads/Torrents/{torrent.Torrent.Name}"
+                                    title: $"{torrent.Torrent?.Name ?? ""} Finished",
+                                    message: $"The Torrent '{torrent.Torrent?.Name ?? ""}' successfully finished downloading",
+                                    url: $"https://files.conesoft.net/Downloads/Torrents/{torrent.Torrent?.Name ?? ""}"
                                 );
                                 break;
                         }
@@ -176,7 +174,7 @@ namespace Conesoft.Website.TorrentKontrol.Services
                     await Task.Delay(1000);
                     RefreshTorrentList();
                 }
-            });
+            }, cancellationToken);
             engine = new Engine(clientEngine, downloadFolder, stateFile, conesoftSecret, cts);
         }
 

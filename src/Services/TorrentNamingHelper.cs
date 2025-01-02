@@ -82,7 +82,7 @@ public partial class TorrentNamingHelper : ITagListGenerator, ICleanNameGenerato
                 {
                     tags.Add(tag);
                 }
-                if (tags.Any() == false)
+                if (tags.Count == 0)
                 {
                     clean.Add(segment);
                 }

@@ -5,13 +5,13 @@
 @inject ICleanNameGenerator cleanName
 @inject Services.Torrents Torrents
 
-<li class="torrent" title="@Torrent.Torrent.Name">
+<li class="torrent" title="@(Torrent.Torrent?.Name ?? string.Empty)">
     <progress max='100' value=@Torrent.Progress></progress>
     <section>
         <b>@cleanedName</b>
         @{
             var size = Torrent.Torrent?.Size.Bytes() ?? new();
-            var speed = Torrent.Monitor?.DownloadSpeed.Bytes() ?? new();
+            var speed = Torrent.Monitor?.DownloadRate.Bytes() ?? new();
         }
         <aside class="size">
             <b>@Math.Round(size.LargestWholeNumberValue, 1)</b>@size.LargestWholeNumberSymbol
@@ -29,12 +29,12 @@
 
 @code {
     [Parameter]
-    public TorrentManager Torrent { get; set; }
+    public TorrentManager Torrent { get; set; } = default!;
 
     string cleanedName = "";
 
     protected override void OnParametersSet()
     {
-        this.cleanedName = cleanName.GenerateCleanNameFromString(Torrent.Torrent.Name);
+        this.cleanedName = cleanName.GenerateCleanNameFromString(Torrent.Torrent?.Name ?? string.Empty);
     }
 }

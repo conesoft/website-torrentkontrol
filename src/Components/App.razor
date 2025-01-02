@@ -3,59 +3,26 @@
 
 <head>
     <PageTitle>TorrentKontrol</PageTitle>
-    <HtmlHead />
+    <HtmlHead Cdn="new" />
     <MetaTags Title="TorrentKontrol" Description="TorrentKontrol by Conesoft" Url="https://torrentkontrol.conesoft.net" Image="/meta/screenshot-1280.jpg" />
     <HeadOutlet />
-    <link rel="stylesheet" type="text/css" href="/style.css?v=@Random.Shared.Next()" />
     <style>
         main menu, main menu * {
             /* display: none; !important; */
             position: inherit !important;
         }
 
-        main menu * {
-            visibility: collapse;
-            display: none;
-            height: 0;
-        }
+            main menu * {
+                visibility: collapse;
+                display: none;
+                height: 0;
+            }
     </style>
 </head>
 
 <body>
     <Routes />
-    <style>
-        #components-reconnect-modal {
-            display: none !important;
-        }
-    </style>
-    <script src="_framework/blazor.web.js" autostart="false"></script>
-    <script>
-        function delay(milliseconds) {
-            return new Promise(resolve => {
-                setTimeout(resolve, milliseconds);
-            });
-        }
-
-        async function boot() {
-            await Blazor.start()
-
-            while (Blazor.defaultReconnectionHandler === undefined) {
-                await delay(100);
-            }
-            console.log("Blazor.defaultReconnectionHandler active, setting up reconnection reloader")
-            Blazor.defaultReconnectionHandler._reconnectCallback = function (d) {
-                document.location.reload()
-            }
-        }
-
-        boot()
-    </script>
-
-    <footer>
-        <p>&copy; @DateTime.Today.Year</p>
-        <p>written by <a href="https://davepermen.net">davepermen</a></p>
-        <p>a <a href="https://conesoft.net">conesoft product</a> running on .NET @Environment.Version.Major</p>
-    </footer>
+    <BootBlazor />
 </body>
 
 </html>
