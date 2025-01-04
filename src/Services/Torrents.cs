@@ -2,7 +2,6 @@
 using Conesoft.Hosting;
 using Conesoft.Notifications;
 using Conesoft.Website.TorrentKontrol.Configuration;
-using Conesoft.Website.TorrentKontrol.Helpers;
 using MonoTorrent;
 using MonoTorrent.Client;
 
