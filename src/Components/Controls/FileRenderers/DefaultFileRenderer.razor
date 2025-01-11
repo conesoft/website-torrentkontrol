@@ -15,24 +15,5 @@
         <a class="name" href="https://files.conesoft.net/@($"{Path}/{Current.Name}")" target="_blank" title="@Current.Name">@cleanName.GenerateCleanNameFromString(Current.Name)</a>
         <TagList SourceForTags="@Current.Name" />
         <b class="size">@Current.Info.Length.Bytes().Humanize()</b>
-        <menu>
-            <li>
-                download <a href="https://files.conesoft.net/*/@($"{Path}/{Current.Name}")" download="">▼</a>
-            </li>
-            <li dangerous>
-                delete <a @onclick="@DeleteFile" @onclick:preventDefault=true @onclick:stopPropagation=true>✕</a>
-            </li>
-        </menu>
     </li>
-}
-
-@code {
-    public async Task DeleteFile()
-    {
-        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Are you sure?\n{Current.Path}");
-        if (confirmed)
-        {
-            Current.Delete();
-        }
-    }
 }

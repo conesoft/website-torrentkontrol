@@ -2,10 +2,6 @@ main {
     grid-template-columns: 0 1rem 1fr auto auto auto auto auto 2rem;
 }
 
-::deep .icon {
-    grid-column: 2;
-}
-
 ::deep :is(.torrent.empty, .incoming .torrent) {
     color: var(--color-70);
 }
@@ -14,27 +10,26 @@ main {
     position: relative;
 }
 
-    ::deep .torrent section {
-        grid-column: 2 / -2;
-        padding-block: 0.5rem;
-        gap: 0.5rem 1rem;
+    ::deep .torrent progress {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        grid-column: 1 / -1;
     }
 
-        ::deep .torrent section > * {
-            grid-row: 1;
-        }
-
-    ::deep .torrent b {
+    ::deep .torrent section {
+        grid-column: 2 / -2;
+        z-index: 1;
         color: var(--accent-color);
         mix-blend-mode: difference;
-        grid-column: 1 / 3;
+    }
+
+    ::deep .torrent b {
+        grid-column: 1 / 4;
     }
 
     ::deep .torrent aside {
-        mix-blend-mode: screen;
         place-self: center;
-        color: var(--accent-color);
-        mix-blend-mode: difference;
         opacity: 0.7;
         font-weight: 300;
     }
@@ -43,136 +38,27 @@ main {
         display: inline;
         text-align: right;
     }
-
+    
     ::deep .torrent .speed {
-        grid-column: 3;
-    }
-    ::deep .torrent .percentage {
         grid-column: 4;
     }
-    ::deep .torrent .size {
+
+    ::deep .torrent .percentage {
         grid-column: 5;
     }
 
+    ::deep .torrent .size {
+        grid-column: 6;
+    }
+
     ::deep .torrent .tags {
-        grid-row: 1;
-        grid-column: 6 / 8;
+        grid-column: 7;
     }
-
-    @media (aspect-ratio < 1) {
-        ::deep .torrent section {
-            grid-template-columns: auto;
-            place-content: stretch;
-        }
-
-        ::deep .torrent b {
-            grid-column: 1 / span 3;
-        }
-
-        ::deep .torrent .size {
-            grid-column: 3;
-            grid-row: 2;
-        }
-
-        ::deep .torrent .percentage {
-            grid-column: 2;
-            grid-row: 2;
-        }
-
-        ::deep .torrent .speed {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        ::deep .torrent .tags {
-            grid-row: 3;
-            grid-column: span 3;
-        }
-
-        ::deep .directory {
-            grid-template-columns: 0 auto 1fr;
-            gap: 0 1rem;
-        }
-
-        ::deep .file {
-            grid-template-columns: 0 auto 1fr;
-            gap: 0 1rem;
-        }
-
-        ::deep .directory .tags {
-            display: none;
-        }
-
-        ::deep .file .tags {
-            display: none;
-        }
-
-        ::deep .file a {
-            text-wrap: nowrap;
-        }
-
-        ::deep .file .size {
-            display: none;
-        }
-    }
-
-
-        ::deep .torrent .tags li {
-            background-color: var(--accent-color);
-            mix-blend-mode: difference;
-        }
-
-    ::deep .torrent progress {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-    }
-
-::deep ul > li:nth-of-type(2n + 1):not(:hover) progress {
-    opacity: 0.8;
-}
-
-::deep .torrent button {
-    grid-column: -1;
-    place-self: stretch end;
-    font-weight: 900;
-    margin-block: -0.5rem;
-    width: 2rem;
-}
-
-    ::deep .torrent button:not(:hover) {
-        color: var(--color-50);
-        background-color: transparent;
-    }
-
-::deep :is(.directory, .file):not(:has(.tags)) .name {
-    grid-column: span 2;
-}
-
-::deep :is(.directory, .file) .size {
-    text-align: right;
-}
 
 ::deep .directory .tags {
     grid-column: 4 / 9;
 }
 
 ::deep .file .tags {
-    grid-column: 4 / 8;
-}
-
-::deep .file .size {
-    grid-column: 8;
-}
-
-::deep a {
-    text-wrap: initial;
-}
-
-::deep .tags {
-    place-self: center stretch;
-}
-
-::deep .icon {
-    place-self: center;
+    grid-column: 4 / 9;
 }

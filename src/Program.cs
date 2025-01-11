@@ -1,5 +1,6 @@
 ﻿using Conesoft.Blazor.Components.Interfaces;
 using Conesoft.Hosting;
+using Conesoft.PwaGenerator;
 using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Configuration;
 using Conesoft.Website.TorrentKontrol.Helpers;
@@ -55,6 +56,7 @@ app
 app.MapStaticAssets();
 
 app.MapUsersWithStorage();
+app.MapPwaInformationFromAppSettings();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

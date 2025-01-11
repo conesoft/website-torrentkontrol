@@ -13,9 +13,9 @@ public class Torrents(IConfiguration configuration, HostEnvironment environment,
 
     static Engine? engine;
 
-    public Action? Update { get; set; }
+    public Func<Task>? Update { get; set; }
 
-    private void RefreshTorrentList()
+    private async Task RefreshTorrentList()
     {
         try
         {
@@ -50,7 +50,7 @@ public class Torrents(IConfiguration configuration, HostEnvironment environment,
         }
         finally
         {
-            Update?.Invoke();
+            await (Update?.Invoke() ?? Task.CompletedTask);
         }
     }
 
@@ -99,7 +99,7 @@ public class Torrents(IConfiguration configuration, HostEnvironment environment,
         catch (Exception)
         {
         }
-        RefreshTorrentList();
+        await RefreshTorrentList();
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -172,7 +172,7 @@ public class Torrents(IConfiguration configuration, HostEnvironment environment,
                 }
                 await clientEngine.SaveStateAsync(stateFile.Path);
                 await Task.Delay(1000);
-                RefreshTorrentList();
+                await RefreshTorrentList();
             }
         }, cancellationToken);
         engine = new Engine(clientEngine, downloadFolder, stateFile, cts);
@@ -180,7 +180,7 @@ public class Torrents(IConfiguration configuration, HostEnvironment environment,
 
     private void Engine_StatsUpdate(object? sender, StatsUpdateEventArgs e)
     {
-        RefreshTorrentList();
+        var _ = RefreshTorrentList();
     }
 
     private async void Engine_CriticalException(object? sender, CriticalExceptionEventArgs e)

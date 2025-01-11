@@ -13,18 +13,22 @@
             var size = Torrent.Torrent?.Size.Bytes() ?? new();
             var speed = Torrent.Monitor?.DownloadRate.Bytes() ?? new();
         }
-        <aside class="size">
-            <b>@Math.Round(size.LargestWholeNumberValue, 1)</b>@size.LargestWholeNumberSymbol
+        <aside class="speed">
+            <b>@Math.Round(speed.LargestWholeNumberValue, 1)</b>@speed.LargestWholeNumberSymbol/s
         </aside>
         <aside class="percentage">
             <b>@Math.Round(Torrent.Progress, 1)</b>%
         </aside>
-        <aside class="speed">
-            <b>@Math.Round(speed.LargestWholeNumberValue, 1)</b>@speed.LargestWholeNumberSymbol/s
+        <aside class="size">
+            <b>@Math.Round(size.LargestWholeNumberValue, 1)</b>@size.LargestWholeNumberSymbol
         </aside>
         <TagList SourceForTags="@Torrent.Torrent?.Name" />
     </section>
-    <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+    <menu>
+        <li>
+            <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+        </li>
+    </menu>
 </li>
 
 @code {

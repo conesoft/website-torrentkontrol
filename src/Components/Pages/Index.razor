@@ -14,6 +14,7 @@
 @inject ICleanNameGenerator cleanName
 @inject IViewTransition viewTransition
 
+@implements IDisposable
 
 <CascadingAuthenticationState>
     <UserHeaderNav>
@@ -82,20 +83,19 @@
 
     protected override Task OnInitializedAsync()
     {
-        Torrents.Update += () => InvokeAsync(async () =>
-        {
-            // if (RendererInfo.IsInteractive)
-            // {
-            //     await viewTransition.BeginAsync();
-            // }
-            torrents = Torrents.GetAllTorrents();
-            StateHasChanged();
-            // if (RendererInfo.IsInteractive)
-            // {
-            //     await viewTransition.EndAsync();
-            // }
-        }).Wait();
+        Torrents.Update += OnTorrentUpdate;
         return Task.CompletedTask;
+    }
+
+    public Task OnTorrentUpdate() => InvokeAsync(() =>
+    {
+        torrents = Torrents.GetAllTorrents();
+        StateHasChanged();
+    });
+
+    void IDisposable.Dispose()
+    {
+        Torrents.Update -= OnTorrentUpdate;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

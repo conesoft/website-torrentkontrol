@@ -74,7 +74,7 @@
         {
             if(root.Exists)
             {
-                await foreach (var files in root.Live())
+                await foreach (var _ in root.Live())
                 {
                     await InvokeAsync(StateHasChanged);
                 }
