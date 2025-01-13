@@ -5,7 +5,6 @@ using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Configuration;
 using Conesoft.Website.TorrentKontrol.Helpers;
 using Conesoft.Website.TorrentKontrol.Services;
-using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +18,6 @@ builder
     .AddLoggingService()
     .AddNotificationService()
     ;
-
-builder.Services.AddViewTransition();
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("noredirect").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
