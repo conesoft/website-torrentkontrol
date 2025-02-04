@@ -16,7 +16,7 @@
     Task linksrequest = Task.CompletedTask;
     Link[] links = [];
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
         links = config.Value.Links;
 
@@ -49,5 +49,7 @@
                 Task.Delay(TimeSpan.FromDays(1))
             );
         }
+
+        return Task.CompletedTask;
     }
 }

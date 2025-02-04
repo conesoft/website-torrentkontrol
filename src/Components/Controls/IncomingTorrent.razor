@@ -13,6 +13,9 @@
 </li>
 
 @code {
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> Parameters { get; set; } = [];
+
     [Parameter]
     public TorrentManager Torrent { get; set; } = default!;
 

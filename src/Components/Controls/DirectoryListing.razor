@@ -15,9 +15,8 @@
         <Authorized>
             @if (Roots.Where(r => r.Exists).SelectMany(d => d.Directories).Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false).Any())
             {
-                <section style="view-transition-name: section-directories">
-                    <header>Directories</header>
-                    <ul>
+                <section title="Directories" style="view-transition-name: section-directories">
+                    <ul class="with-icon">
                         @foreach (var directory in Roots
                            .Where(r => r.Exists)
                            .SelectMany(d => d.Directories)
@@ -36,8 +35,7 @@
                 @foreach (var group in GroupedFiles(Roots.Where(r => r.Exists).SelectMany(d => d.Files).Where(f => f.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)))
                 {
                     var name = group.Key.Name.Replace("TypeRenderer", "").Replace("Default", "Files");
-                    <section style=@($"view-transition-name: section-{name}-files")>
-                        <header>@name</header>
+                    <section title="@name" style=@($"view-transition-name: section-{name}-files")>
                         <ul>
                             @foreach (var file in group.OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer()))
                             {
@@ -59,7 +57,7 @@
         return files.GroupBy(f =>
         {
             var type = types.FirstOrDefault(
-                t => (Activator.CreateInstance(t) as TypeRenderers.DefaultTypeRenderer)!.Extensions.Contains(f.Extension.ToLower()[1..]),
+                t => (Activator.CreateInstance(t) as TypeRenderers.DefaultTypeRenderer)!.Extensions.Contains(f.Extension.ToLower()),
                 typeof(TypeRenderers.DefaultTypeRenderer)
             );
 
@@ -76,6 +74,7 @@
             {
                 await foreach (var _ in root.Live())
                 {
+                    Console.WriteLine("change");
                     await InvokeAsync(StateHasChanged);
                 }
             }

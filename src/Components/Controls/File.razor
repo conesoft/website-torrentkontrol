@@ -17,7 +17,7 @@
     var types = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.Name.EndsWith("TypeRenderer"));
 
     var type = types.FirstOrDefault(
-        t => (Activator.CreateInstance(t) as DefaultTypeRenderer)!.Extensions.Contains(Current.Extension.ToLower()[1..]),
+        t => (Activator.CreateInstance(t) as DefaultTypeRenderer)!.Extensions.Contains(Current.Extension.ToLower()),
         typeof(DefaultTypeRenderer)
     );
     // var type = Type.GetType($"Conesoft.Website.Files.Components.Controls.TypeRenderers.{CleanUp(Current.Extension)}FileRenderer")

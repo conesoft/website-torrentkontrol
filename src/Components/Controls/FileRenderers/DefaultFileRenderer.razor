@@ -12,8 +12,10 @@
 {
     <li class="file">
         <img class="icon" src="/file-icon.svg" />
-        <a class="name" href="https://files.conesoft.net/@($"{Path}/{Current.Name}")" target="_blank" title="@Current.Name">@cleanName.GenerateCleanNameFromString(Current.Name)</a>
-        <TagList SourceForTags="@Current.Name" />
-        <b class="size">@Current.Info.Length.Bytes().Humanize()</b>
+        <section>
+            <a class="name" href="https://files.conesoft.net/@($"{Path}/{Current.Name}")" target="_blank" title="@Current.Name">@cleanName.GenerateCleanNameFromString(Current.Name)</a>
+            <TagList SourceForTags="@Current.Name" />
+            <b class="size">@Current.Info.Length.Bytes().Humanize()</b>
+        </section>
     </li>
 }

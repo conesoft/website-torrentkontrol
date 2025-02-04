@@ -5,12 +5,14 @@
 @using MonoTorrent
 @using System.Reflection
 @using System.Text.RegularExpressions
+@using Toolbelt.Blazor.ViewTransition
 
 @rendermode InteractiveServer
 
 @inject Services.Torrents Torrents
 @inject IJSRuntime js
 @inject ICleanNameGenerator cleanName
+@inject IViewTransition viewTransition
 
 @implements IDisposable
 
@@ -29,10 +31,15 @@
     <main>
         <AuthorizeView>
             <Authorized>
-                <section style="view-transition-name: section-addmagnet">
-                    <button @onclick="AddMagnet">add magnet</button>
-                </section>
-                @if (torrents.Any() == false)
+                <AuthorizeView Roles="Admin, Editor" Context="_">
+                    <Authorized>
+                        <section style="view-transition-name: section-addmagnet">
+                            <button @onclick="AddMagnet">add magnet</button>
+                        </section>
+                    </Authorized>
+                </AuthorizeView>
+
+                @if (incoming.Any() == false && downloading.Any() == false)
                 {
                     <section style="view-transition-name: section-notorrents">
                         <aside class="torrent empty">no active torrent yet ... :(</aside>
@@ -40,17 +47,13 @@
                 }
                 else
                 {
-                    var incoming = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Metadata);
-                    var downloading = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Downloading);
-
                     if (incoming.Any())
                     {
-                        <section style="view-transition-name: section-incomingtorrents">
-                            <header>Incoming</header>
-                            <ul class="incoming">
+                        <section title="Incoming" style="view-transition-name: section-incomingtorrents">
+                            <ul class="without-header incoming">
                                 @foreach (var t in incoming)
                                 {
-                                    <IncomingTorrent @key=t Torrent=@t />
+                                    <IncomingTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
                                 }
                             </ul>
                         </section>
@@ -58,12 +61,11 @@
 
                     if (downloading.Any())
                     {
-                        <section style="view-transition-name: section-downloadingtorrents">
-                            <header>Downloading</header>
-                            <ul class="downloading">
+                        <section title="Downloading" style="view-transition-name: section-downloadingtorrents">
+                            <ul class="without-icon downloading">
                                 @foreach (var t in downloading)
                                 {
-                                    <ActiveTorrent @key=t Torrent=@t />
+                                    <ActiveTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
                                 }
                             </ul>
                         </section>
@@ -77,7 +79,8 @@
 </CascadingAuthenticationState>
 
 @code {
-    IList<MonoTorrent.Client.TorrentManager> torrents = [];
+    MonoTorrent.Client.TorrentManager[] incoming = [];
+    MonoTorrent.Client.TorrentManager[] downloading = [];
 
     protected override Task OnInitializedAsync()
     {
@@ -85,11 +88,38 @@
         return Task.CompletedTask;
     }
 
-    public Task OnTorrentUpdate() => InvokeAsync(() =>
+    public async Task OnTorrentUpdate()
     {
-        torrents = Torrents.GetAllTorrents();
-        StateHasChanged();
-    });
+        await InvokeAsync(async () =>
+        {
+            var torrents = Torrents.GetAllTorrents();
+
+            var newincoming = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Metadata).ToArray();
+            var newdownloading = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Downloading).ToArray();
+
+            // needs expansion for other content
+            var needsTransition =
+                newincoming.Length != incoming.Length
+                || newdownloading.Length != downloading.Length
+                ;
+
+            incoming = newincoming;
+            downloading = newdownloading;
+
+            if (needsTransition)
+            {
+                await viewTransition.BeginAsync();
+            }
+
+            StateHasChanged();
+
+            if (needsTransition)
+            {
+                await viewTransition.EndAsync();
+            }
+        });
+    }
+
 
     void IDisposable.Dispose()
     {
@@ -107,6 +137,8 @@
             {
                 Console.WriteLine("file handling supported");
             }
+
+            //Console.WriteLine("View Transitions are supported: " + await viewTransitionService.IsSupportedAsync());
         }
     }
 

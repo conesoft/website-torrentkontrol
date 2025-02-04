@@ -5,6 +5,7 @@ using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Configuration;
 using Conesoft.Website.TorrentKontrol.Helpers;
 using Conesoft.Website.TorrentKontrol.Services;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,9 @@ builder
     {
         configurator.Add<Config>();
     })
-    .AddUsersWithStorage()
     .AddHostEnvironmentInfo()
     .AddLoggingService()
+    .AddUsersWithStorage()
     .AddNotificationService()
     ;
 
@@ -27,35 +28,19 @@ builder.Services.AddHttpClient("noredirect").ConfigurePrimaryHttpMessageHandler(
 
 builder.Services
     .AddCompiledHashCacheBuster()
-
+    .AddViewTransition()
     .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public"))
-
     .AddSingleton<Torrents>().AsHostedService<Torrents>()
-
     .AddSingleton<TorrentNamingHelper>()
     .AddTransient<ITagListGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
     .AddTransient<ICleanNameGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
-    
-    .AddHttpClient()
-    .AddAntiforgery()
-    .AddCascadingAuthenticationState()
     .AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-app
-    .UseCompiledHashCacheBuster()
-    .UseDeveloperExceptionPage()
-    .UseRouting()
-    .UseStaticFiles()
-    .UseAntiforgery();
-
-app.MapStaticAssets();
-
-app.MapUsersWithStorage();
 app.MapPwaInformationFromAppSettings();
-
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapUsersWithStorage();
+app.MapStaticAssets();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();
