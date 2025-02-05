@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Conesoft.Hosting" Version="3.4.10" />
+		<PackageReference Include="Conesoft.Hosting" Version="3.4.12" />
 		<PackageReference Include="MonoTorrent" Version="3.0.2" />
 	</ItemGroup>
 

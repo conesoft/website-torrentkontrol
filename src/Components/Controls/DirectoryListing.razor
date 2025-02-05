@@ -1,6 +1,9 @@
 ﻿@using System.Reflection
 @using Conesoft.Files
 @using Conesoft.Website.TorrentKontrol.Helpers
+
+@implements IDisposable
+
 @inject FileHostingPaths fileHostingPaths
 
 @rendermode InteractiveServer
@@ -18,12 +21,12 @@
                 <section title="Directories" style="view-transition-name: section-directories">
                     <ul class="with-icon">
                         @foreach (var directory in Roots
-                           .Where(r => r.Exists)
-                           .SelectMany(d => d.Directories)
-                           .Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)
-                           .OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer())
-                           .DistinctBy(d => d.Name)
-                       )
+                       .Where(r => r.Exists)
+                       .SelectMany(d => d.Directories)
+                       .Where(d => d.Info.Attributes.HasFlag(FileAttributes.Hidden) == false)
+                       .OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer())
+                       .DistinctBy(d => d.Name)
+                    )
                         {
                             <Directory Path="@Path" Current="@directory" />
                         }
@@ -65,20 +68,12 @@
         });
     }
 
-    protected override Task OnInitializedAsync()
+    CancellationTokenSource? cancellationTokenSource = null;
+    public void Dispose() => cancellationTokenSource?.Cancel();
+
+    protected override void OnInitialized()
     {
         var roots = fileHostingPaths.Roots.Select(p => p / Path);
-        roots.AsParallel().ForAll(async root =>
-        {
-            if(root.Exists)
-            {
-                await foreach (var _ in root.Live())
-                {
-                    Console.WriteLine("change");
-                    await InvokeAsync(StateHasChanged);
-                }
-            }
-        });
-        return Task.CompletedTask;
+        cancellationTokenSource = roots.Where(r => r.Exists).Live(async () => await InvokeAsync(StateHasChanged));
     }
 }
