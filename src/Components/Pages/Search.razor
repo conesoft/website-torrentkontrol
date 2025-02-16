@@ -86,7 +86,11 @@
         }
         var client = factory.CreateClient();
 
-        client.DefaultRequestHeaders.Add("Origin", config.Value.Search.Origin);
+        foreach(var header in config.Value.Search.Headers)
+        {
+            client.DefaultRequestHeaders.Add(header.Key, header.Value);
+        }
+        var response = await client.GetStringAsync(config.Value.Search.Query.Replace("{Query}", Query));
         var entries = await client.GetFromJsonAsync<Entry[]>(config.Value.Search.Query.Replace("{Query}", Query));
 
         var best = HighestQuality(entries ?? []);

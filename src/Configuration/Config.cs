@@ -2,9 +2,9 @@
 
 record Config(string DownloadUrl, Search Search, Link[] Links)
 {
-    public Config() : this("", new("", ""), [])
+    public Config() : this("", new("", []), [])
     {
     }
 }
 
-record Search(string Query, string Origin);
+record Search(string Query, Dictionary<string, string> Headers);
