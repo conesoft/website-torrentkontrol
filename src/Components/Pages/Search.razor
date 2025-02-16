@@ -9,6 +9,8 @@
 @inject IHttpClientFactory factory
 @inject TorrentNamingHelper namingHelper
 
+@rendermode InteractiveServer
+
 <CascadingAuthenticationState>
     <UserHeaderNav>
         <HomeButtonContent>⌂</HomeButtonContent>
@@ -29,40 +31,50 @@
                 <section id="search">
                     <form>
                         <input type="search" name="query" value=@Query placeholder="enter search terms here" />
-                        <button>&#x1F50E;&#xFE0E;</button>
+                        <button type="submit">&#x1F50E;&#xFE0E;</button>
                     </form>
                 </section>
 
-                @if (entries != null && quality != null)
+                @if (entries != null)
                 {
                     @if (entries.Length > 0)
                     {
-                        <section id="results" title="@quality.ToString()!.Replace("Quality", "")">
-                            <ul class="with-icon">
-                                @foreach (var entry in entries.OrderByDescending(e => e.Size))
-                                {
-                                    <li>
-                                        @if (entry.NumFiles > 1)
-                                        {
-                                            <img src="/folder-icon.svg">
-                                        }
-                                        else
-                                        {
-                                            <img src="/file-icon.svg">
-                                        }
-                                        <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
-                                            <a href="magnet:?xt=urn:btih:@entry.InfoHash&dn=@UrlEncoder.Default.Encode(entry.Name)">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
-                                            <TagList SourceForTags="@entry.Name" />
-                                            <aside>@entry.Size.Bytes()</aside>
-                                        </section>
-                                    </li>
-                                }
-                            </ul>
-                        </section>
+                        foreach(var quality in entries)
+                        {
+                            <section id="results" title="@quality.Key.ToString()!.Replace("Quality", "")">
+                                <ul class="with-icon">
+                                    @foreach (var entry in quality.OrderByDescending(e => e.Size))
+                                    {
+                                        <li>
+                                            @if (entry.NumFiles > 1)
+                                            {
+                                                <img src="/folder-icon.svg">
+                                            }
+                                            else
+                                            {
+                                                <img src="/file-icon.svg">
+                                            }
+                                            <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
+                                                <a href="magnet:?xt=urn:btih:@entry.InfoHash&dn=@UrlEncoder.Default.Encode(entry.Name)">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
+                                                <TagList SourceForTags="@entry.Name" />
+                                                <aside>@entry.Size.Bytes()</aside>
+                                            </section>
+                                        </li>
+                                    }
+                                </ul>
+                            </section>
+                        }
                     }
                     else
                     {
                         <aside id="no-results">no results found for '@Query' ... :(</aside>
+                    }
+                }
+                else
+                {
+                    @if(Query != null)
+                    {
+                        <aside id="no-results">searching ...</aside>
                     }
                 }
 
@@ -72,8 +84,7 @@
 </CascadingAuthenticationState>
 
 @code {
-    Entry[]? entries;
-    Quality? quality;
+    IGrouping<Quality, Entry>[]? entries;
 
     [SupplyParameterFromQuery]
     public string? Query { get; set; }
@@ -84,21 +95,22 @@
         {
             return;
         }
-        var client = factory.CreateClient();
-
-        foreach(var header in config.Value.Search.Headers)
+        if (RendererInfo.IsInteractive)
         {
-            client.DefaultRequestHeaders.Add(header.Key, header.Value);
+
+            var client = factory.CreateClient();
+
+            foreach (var header in config.Value.Search.Headers)
+            {
+                client.DefaultRequestHeaders.Add(header.Key, header.Value);
+            }
+            var response = await client.GetStringAsync(config.Value.Search.Query.Replace("{Query}", Query));
+            var entries = await client.GetFromJsonAsync<Entry[]>(config.Value.Search.Query.Replace("{Query}", Query));
+
+            this.entries = GroupedByQuality(entries ?? []).ToArray();
+
+            await InvokeAsync(StateHasChanged);
         }
-        var response = await client.GetStringAsync(config.Value.Search.Query.Replace("{Query}", Query));
-        var entries = await client.GetFromJsonAsync<Entry[]>(config.Value.Search.Query.Replace("{Query}", Query));
-
-        var best = HighestQuality(entries ?? []);
-
-        this.entries = best.Entries.ToArray();
-        this.quality = best.Quality;
-
-        await InvokeAsync(StateHasChanged);
     }
 
     static (IEnumerable<Entry> Entries, Quality Quality) HighestQuality(IEnumerable<Entry> entries, bool over18 = false)
@@ -115,6 +127,20 @@
         if (found.Any()) return (Entries: found, Quality.Quality720p);
         return (Entries: entries, Quality.Any);
     }
+
+    static IEnumerable<IGrouping<Quality, Entry>> GroupedByQuality(IEnumerable<Entry> entries, bool over18 = false)
+    {
+        entries = over18 ? entries : entries.Where(e => e.Category.StartsWith("50") == false);
+        return entries.GroupBy(e => GetQualityFrom(e)).OrderByDescending(g => g.Key);
+    }
+
+    static Quality GetQualityFrom(Entry entry) => entry.Name switch
+    {
+        var name when name.Contains("2160p") => Quality.Quality2160p,
+        var name when name.Contains("1080p") => Quality.Quality1080p,
+        var name when name.Contains("720p") => Quality.Quality720p,
+        _ => Quality.Any
+    };
 
     enum Quality
     {
