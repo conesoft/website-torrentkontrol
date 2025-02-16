@@ -1,6 +1,7 @@
 ﻿@page "/addmagneturi"
 @using Conesoft.Website.TorrentKontrol.Components.Controls
 @using Conesoft.Website.TorrentKontrol.Services
+@using Microsoft.JSInterop
 @using MonoTorrent
 
 @inject Torrents torrents
@@ -60,6 +61,6 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await Task.Delay(333);
-        navigation.NavigateTo("/", forceLoad: false, replace: true);
+        navigation.NavigateTo("/", forceLoad: true);
     }
 }

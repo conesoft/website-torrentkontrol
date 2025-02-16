@@ -1,6 +1,7 @@
 ﻿using Conesoft.Files;
 using Conesoft.Hosting;
 using Conesoft.Notifications;
+using Conesoft.Tools;
 using Conesoft.Website.TorrentKontrol.Configuration;
 using MonoTorrent;
 using MonoTorrent.Client;
@@ -155,13 +156,13 @@ public class Torrents(IConfiguration configuration, HostEnvironment environment,
         {
             while (cts.IsCancellationRequested == false)
             {
-                foreach (var torrent in clientEngine.Torrents.ToArray())
+                foreach (var torrent in clientEngine.Torrents.NotNull().ToArray())
                 {
                     switch (torrent.State)
                     {
                         case TorrentState.Seeding:
-                            await torrent.StopAsync();
-                            await clientEngine.RemoveAsync(torrent);
+                            await Safe.TryAsync(async () => await torrent.StopAsync());
+                            await Safe.TryAsync(async () => await clientEngine?.RemoveAsync(torrent));
                             await notifier.Notify(
                                 title: $"{torrent.Torrent?.Name ?? ""} Finished",
                                 message: $"The Torrent '{torrent.Torrent?.Name ?? ""}' successfully finished downloading",

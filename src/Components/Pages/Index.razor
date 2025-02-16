@@ -21,6 +21,8 @@
         <HomeButtonContent>⌂</HomeButtonContent>
         <NavContent>
             <NavLink Match=NavLinkMatch.All href="/">torrentkontrol</NavLink>
+            <NavLink href="/search" style="font-size: 0.8em">&#x1F50E;&#xFE0E;</NavLink>
+            |
             <AuthorizeView>
                 <Authorized>
                     <UnblockedLink />
@@ -41,16 +43,14 @@
 
                 @if (incoming.Any() == false && downloading.Any() == false)
                 {
-                    <section style="view-transition-name: section-notorrents">
-                        <aside class="torrent empty">no active torrent yet ... :(</aside>
-                    </section>
+                    <aside id="no-torrent">no active torrent yet ... :(</aside>
                 }
                 else
                 {
                     if (incoming.Any())
                     {
                         <section title="Incoming" style="view-transition-name: section-incomingtorrents">
-                            <ul class="without-header incoming">
+                            <ul class="without-icon incoming">
                                 @foreach (var t in incoming)
                                 {
                                     <IncomingTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
@@ -70,6 +70,18 @@
                             </ul>
                         </section>
                     }
+
+                    if (seeding.Any())
+                    {
+                        <section title="Seeding" style="view-transition-name: section-seedingtorrents">
+                            <ul class="without-icon seeding">
+                                @foreach (var t in seeding)
+                                {
+                                    <ActiveTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
+                                }
+                            </ul>
+                        </section>
+                    }
                 }
             </Authorized>
         </AuthorizeView>
@@ -81,6 +93,7 @@
 @code {
     MonoTorrent.Client.TorrentManager[] incoming = [];
     MonoTorrent.Client.TorrentManager[] downloading = [];
+    MonoTorrent.Client.TorrentManager[] seeding = [];
 
     protected override Task OnInitializedAsync()
     {
@@ -96,15 +109,18 @@
 
             var newincoming = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Metadata).ToArray();
             var newdownloading = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Downloading).ToArray();
+            var newseeding = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Seeding).ToArray();
 
             // needs expansion for other content
             var needsTransition =
                 newincoming.Length != incoming.Length
                 || newdownloading.Length != downloading.Length
+                || newseeding.Length != seeding.Length
                 ;
 
             incoming = newincoming;
             downloading = newdownloading;
+            seeding = newseeding;
 
             if (needsTransition)
             {

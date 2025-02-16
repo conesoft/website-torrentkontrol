@@ -39,7 +39,7 @@
                 {
                     var name = group.Key.Name.Replace("TypeRenderer", "").Replace("Default", "Files");
                     <section title="@name" style=@($"view-transition-name: section-{name}-files")>
-                        <ul>
+                        <ul class="with-icon">
                             @foreach (var file in group.OrderBy(d => d.Name, new Conesoft.Tools.NaturalSortComparer()))
                             {
                                 <File Path="@Path" Current="@file" />

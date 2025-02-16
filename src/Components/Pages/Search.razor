@@ -1,0 +1,125 @@
+﻿@page "/search"
+@using System.Text.Json.Serialization
+@using System.Text.Encodings.Web
+@using Conesoft.Website.TorrentKontrol.Components.Controls
+@using Conesoft.Website.TorrentKontrol.Configuration
+@using Conesoft.Website.TorrentKontrol.Services
+
+@inject IOptionsSnapshot<Config> config
+@inject IHttpClientFactory factory
+@inject TorrentNamingHelper namingHelper
+
+<CascadingAuthenticationState>
+    <UserHeaderNav>
+        <HomeButtonContent>⌂</HomeButtonContent>
+        <NavContent>
+            <NavLink Match=NavLinkMatch.All href="/">torrentkontrol</NavLink>
+            <NavLink href="/search" style="font-size: 0.8em">&#x1F50E;&#xFE0E;</NavLink>
+            |
+            <AuthorizeView>
+                <Authorized>
+                    <UnblockedLink />
+                </Authorized>
+            </AuthorizeView>
+        </NavContent>
+    </UserHeaderNav>
+    <AuthorizeView Roles="Admin, Editor" Context="_">
+        <Authorized>
+            <main>
+                <section id="search">
+                    <form>
+                        <input type="search" name="query" value=@Query placeholder="enter search terms here" />
+                        <button>&#x1F50E;&#xFE0E;</button>
+                    </form>
+                </section>
+
+                @if (entries != null && quality != null)
+                {
+                    @if (entries.Length > 0)
+                    {
+                        <section id="results" title="@quality.ToString()!.Replace("Quality", "")">
+                            <ul class="with-icon">
+                                @foreach (var entry in entries.OrderByDescending(e => e.Size))
+                                {
+                                    <li>
+                                        @if (entry.NumFiles > 1)
+                                        {
+                                            <img src="/folder-icon.svg">
+                                        }
+                                        else
+                                        {
+                                            <img src="/file-icon.svg">
+                                        }
+                                        <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
+                                            <a href="magnet:?xt=urn:btih:@entry.InfoHash&dn=@UrlEncoder.Default.Encode(entry.Name)">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
+                                            <TagList SourceForTags="@entry.Name" />
+                                            <aside>@entry.Size.Bytes()</aside>
+                                        </section>
+                                    </li>
+                                }
+                            </ul>
+                        </section>
+                    }
+                    else
+                    {
+                        <aside id="no-results">no results found for '@Query' ... :(</aside>
+                    }
+                }
+
+            </main>
+        </Authorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+    Entry[]? entries;
+    Quality? quality;
+
+    [SupplyParameterFromQuery]
+    public string? Query { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Query == null)
+        {
+            return;
+        }
+        var client = factory.CreateClient();
+
+        client.DefaultRequestHeaders.Add("Origin", config.Value.Search.Origin);
+        var entries = await client.GetFromJsonAsync<Entry[]>(config.Value.Search.Query.Replace("{Query}", Query));
+
+        var best = HighestQuality(entries ?? []);
+
+        this.entries = best.Entries.ToArray();
+        this.quality = best.Quality;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    static (IEnumerable<Entry> Entries, Quality Quality) HighestQuality(IEnumerable<Entry> entries, bool over18 = false)
+    {
+        if (over18 == false)
+        {
+            entries = entries.Where(e => e.Category.StartsWith("50") == false);
+        }
+        var found = entries.Where(e => e.Name.Contains("2160p"));
+        if (found.Any()) return (Entries: found, Quality.Quality2160p);
+        found = entries.Where(e => e.Name.Contains("1080p"));
+        if (found.Any()) return (Entries: found, Quality.Quality1080p);
+        found = entries.Where(e => e.Name.Contains("720p"));
+        if (found.Any()) return (Entries: found, Quality.Quality720p);
+        return (Entries: entries, Quality.Any);
+    }
+
+    enum Quality
+    {
+        Any,
+        Quality720p,
+        Quality1080p,
+        Quality2160p
+    }
+
+
+    public record Entry(string Id, string Name, [property: JsonPropertyName("info_hash")] string InfoHash, string Leechers, string Seeders, [property: JsonPropertyName("num_files")] int NumFiles, long Size, string Username, string Added, string Status, string Category, string Imdb);
+}

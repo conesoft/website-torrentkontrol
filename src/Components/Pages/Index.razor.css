@@ -6,6 +6,14 @@ main {
     color: var(--color-70);
 }
 
+::deep #no-torrent {
+    color: var(--background-color);
+    width: 100%;
+    min-height: 2rem;
+    text-align: center;
+    font-style: italic;
+}
+
 ::deep .torrent {
     position: relative;
 }

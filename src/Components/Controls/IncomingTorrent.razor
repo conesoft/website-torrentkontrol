@@ -6,10 +6,14 @@
 
 <li class="torrent" title="@Torrent.MagnetLink.Name">
     <section>
-        <aside>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</aside>
+        <b>incoming transmission @(string.IsNullOrEmpty(cleanedName) == false ? $"for '{cleanedName}'" : "") &hellip;</b>
         <TagList SourceForTags="@Torrent.MagnetLink.Name" />
     </section>
-    <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+    <menu>
+        <li>
+            <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+        </li>
+    </menu>
 </li>
 
 @code {

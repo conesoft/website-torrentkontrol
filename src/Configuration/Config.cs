@@ -1,8 +1,10 @@
 ﻿namespace Conesoft.Website.TorrentKontrol.Configuration;
 
-record Config(string DownloadUrl, Link[] Links)
+record Config(string DownloadUrl, Search Search, Link[] Links)
 {
-    public Config() : this("", [])
+    public Config() : this("", new("", ""), [])
     {
     }
 }
+
+record Search(string Query, string Origin);

@@ -1,0 +1,33 @@
+::deep #search form {
+    display: flex;
+}
+
+    ::deep #search form > *:first-child {
+        flex-grow: 1;
+    }
+
+    ::deep #search form > button {
+        aspect-ratio: 1;
+    }
+
+
+::deep #results .folder a {
+}
+
+::deep #results .file a {
+    font-weight: 100;
+}
+
+::deep #results aside {
+    min-width: 10rem;
+    text-align: right;
+}
+
+
+::deep #no-results {
+    color: var(--background-color);
+    width: 100%;
+    min-height: 2rem;
+    text-align: center;
+    font-style: italic;
+}
