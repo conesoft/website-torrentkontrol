@@ -35,47 +35,46 @@
                     </form>
                 </section>
 
-                @if (entries != null)
+                @if (entries?.Length > 0)
                 {
-                    @if (entries.Length > 0)
+                    foreach (var quality in entries)
                     {
-                        foreach(var quality in entries)
-                        {
-                            <section id="results" title="@quality.Key.ToString()!.Replace("Quality", "")">
-                                <ul class="with-icon">
-                                    @foreach (var entry in quality.OrderByDescending(e => e.Size))
-                                    {
-                                        <li>
-                                            @if (entry.NumFiles > 1)
-                                            {
-                                                <img src="/folder-icon.svg">
-                                            }
-                                            else
-                                            {
-                                                <img src="/file-icon.svg">
-                                            }
-                                            <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
-                                                <a href="magnet:?xt=urn:btih:@entry.InfoHash&dn=@UrlEncoder.Default.Encode(entry.Name)">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
-                                                <TagList SourceForTags="@entry.Name" />
-                                                <aside>@entry.Size.Bytes()</aside>
-                                            </section>
-                                        </li>
-                                    }
-                                </ul>
-                            </section>
-                        }
-                    }
-                    else
-                    {
-                        <aside id="no-results">no results found for '@Query' ... :(</aside>
+                        <section id="results" title="@quality.Key.ToString()!.Replace("Quality", "")">
+                            <ul class="with-icon">
+                                @foreach (var entry in quality.OrderByDescending(e => e.Size))
+                                {
+                                    <li>
+                                        @if (entry.NumFiles > 1)
+                                        {
+                                            <img src="/folder-icon.svg">
+                                        }
+                                        else
+                                        {
+                                            <img src="/file-icon.svg">
+                                        }
+                                        <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
+                                            <a href="magnet:?xt=urn:btih:@entry.InfoHash&dn=@UrlEncoder.Default.Encode(entry.Name)">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
+                                            <TagList SourceForTags="@entry.Name" />
+                                            <table class="activity">
+                                                <tr><th>▲</th><td>@entry.Seeders</td></tr>
+                                                <tr><th>▼</th><td>@entry.Leechers</td></tr>
+                                            </table>
+                                            <aside>@entry.Size.Bytes()</aside>
+                                        </section>
+                                    </li>
+                                }
+                            </ul>
+                        </section>
                     }
                 }
-                else
+                else if (entries != null)
                 {
-                    @if(Query != null)
-                    {
-                        <aside id="no-results">searching ...</aside>
-                    }
+                    <aside id="no-results">no results found for '@Query' ... :(</aside>
+                }
+
+                @if (Query?.Length > 0 && entries == null)
+                {
+                    <aside id="no-results">searching ...</aside>
                 }
 
             </main>
@@ -91,13 +90,12 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Query == null)
+        if (string.IsNullOrWhiteSpace(Query))
         {
             return;
         }
         if (RendererInfo.IsInteractive)
         {
-
             var client = factory.CreateClient();
 
             foreach (var header in config.Value.Search.Headers)
@@ -113,26 +111,7 @@
         }
     }
 
-    static (IEnumerable<Entry> Entries, Quality Quality) HighestQuality(IEnumerable<Entry> entries, bool over18 = false)
-    {
-        if (over18 == false)
-        {
-            entries = entries.Where(e => e.Category.StartsWith("50") == false);
-        }
-        var found = entries.Where(e => e.Name.Contains("2160p"));
-        if (found.Any()) return (Entries: found, Quality.Quality2160p);
-        found = entries.Where(e => e.Name.Contains("1080p"));
-        if (found.Any()) return (Entries: found, Quality.Quality1080p);
-        found = entries.Where(e => e.Name.Contains("720p"));
-        if (found.Any()) return (Entries: found, Quality.Quality720p);
-        return (Entries: entries, Quality.Any);
-    }
-
-    static IEnumerable<IGrouping<Quality, Entry>> GroupedByQuality(IEnumerable<Entry> entries, bool over18 = false)
-    {
-        entries = over18 ? entries : entries.Where(e => e.Category.StartsWith("50") == false);
-        return entries.GroupBy(e => GetQualityFrom(e)).OrderByDescending(g => g.Key);
-    }
+    static IEnumerable<IGrouping<Quality, Entry>> GroupedByQuality(IEnumerable<Entry> entries) => entries.Where(e => e.Id != 0).GroupBy(GetQualityFrom).OrderByDescending(g => g.Key);
 
     static Quality GetQualityFrom(Entry entry) => entry.Name switch
     {
@@ -151,5 +130,5 @@
     }
 
 
-    public record Entry(string Id, string Name, [property: JsonPropertyName("info_hash")] string InfoHash, string Leechers, string Seeders, [property: JsonPropertyName("num_files")] int NumFiles, long Size, string Username, string Added, string Status, string Category, string Imdb);
+    public record Entry(long Id, string Name, [property: JsonPropertyName("info_hash")] string InfoHash, string Leechers, string Seeders, [property: JsonPropertyName("num_files")] int NumFiles, long Size, string Username, string Added, string Status, string Category, string Imdb);
 }
