@@ -34,6 +34,7 @@ builder.Services
     .AddSingleton<TorrentNamingHelper>()
     .AddTransient<ITagListGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
     .AddTransient<ICleanNameGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
+    .AddHostedService<MagnetWatcher>()
     .AddRazorComponents().AddInteractiveServerComponents();
 
 var app = builder.Build();

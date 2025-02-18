@@ -1,12 +1,21 @@
 ::deep #search form {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 2rem;
 }
 
-    ::deep #search form > *:first-child {
-        flex-grow: 1;
+    ::deep #search form input {
+        grid-row: 1;
+        grid-column: 1 / span 2;
     }
 
-    ::deep #search form > button {
+        ::deep #search form input::-webkit-search-cancel-button {
+            position: relative;
+            right: 2rem;
+        }
+
+    ::deep #search form button {
+        grid-row: 1;
+        grid-column: 2;
         aspect-ratio: 1;
     }
 
@@ -23,13 +32,13 @@
     font-size: 0.5em;
     padding-inline: 1rem;
     min-width: 4rem;
-        opacity: 0.7;
-        font-weight: 100;
+    opacity: 0.7;
+    font-weight: 100;
 }
 
-::deep #results .activity * {
-    display: revert;
-}
+    ::deep #results .activity * {
+        display: revert;
+    }
 
     ::deep #results .activity th {
         color: var(--accent-color);
