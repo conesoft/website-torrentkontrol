@@ -3,8 +3,10 @@ using Conesoft.Hosting;
 using Conesoft.PwaGenerator;
 using Conesoft.Website.TorrentKontrol.Components;
 using Conesoft.Website.TorrentKontrol.Configuration;
+using Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces;
+using Conesoft.Website.TorrentKontrol.Features.Runtime.Services;
+using Conesoft.Website.TorrentKontrol.Features.Watchers.Services;
 using Conesoft.Website.TorrentKontrol.Helpers;
-using Conesoft.Website.TorrentKontrol.Services;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +32,8 @@ builder.Services
     .AddCompiledHashCacheBuster()
     .AddViewTransition()
     .AddSingleton(new FileHostingPaths(@"D:\Public", @"E:\Public"))
-    .AddSingleton<Torrents>().AsHostedService<Torrents>()
+    .AddSingleton<TorrentService>().AsHostedService<TorrentService>()
+    .AddTransient<ITorrentEngineAccess>(s => s.GetRequiredService<TorrentService>())
     .AddSingleton<TorrentNamingHelper>()
     .AddTransient<ITagListGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())
     .AddTransient<ICleanNameGenerator>(s => s.GetRequiredService<TorrentNamingHelper>())

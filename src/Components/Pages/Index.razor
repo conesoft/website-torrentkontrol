@@ -1,15 +1,19 @@
 ﻿@page "/"
-@using Conesoft.Website.TorrentKontrol.Components.Controls
-@using Conesoft.Blazor.Components.Interfaces
-@using Conesoft.Blazor.Components
-@using MonoTorrent
 @using System.Reflection
 @using System.Text.RegularExpressions
+@using Conesoft.Blazor.Components
+@using Conesoft.Blazor.Components.Interfaces
+@using Conesoft.Website.TorrentKontrol.Components.Controls
+@using Conesoft.Website.TorrentKontrol.Features.Runtime
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Services
+@using MonoTorrent
+@using Serilog
 @using Toolbelt.Blazor.ViewTransition
 
 @rendermode InteractiveServer
 
-@inject Services.Torrents Torrents
+@inject ITorrentEngineAccess engineAccess
 @inject IJSRuntime js
 @inject ICleanNameGenerator cleanName
 @inject IViewTransition viewTransition
@@ -33,54 +37,45 @@
     <main>
         <AuthorizeView>
             <Authorized>
-                <AuthorizeView Roles="Admin, Editor" Context="_">
-                    <Authorized>
-                        <section style="view-transition-name: section-addmagnet">
-                            <button @onclick="AddMagnet">add magnet</button>
-                        </section>
-                    </Authorized>
-                </AuthorizeView>
-
-                @if (incoming.Any() == false && downloading.Any() == false)
+                @if (engineAccess.Engine is TorrentEngine engine)
                 {
-                    <aside id="no-torrent">no active torrent yet ... :(</aside>
-                }
-                else
-                {
-                    if (incoming.Any())
-                    {
-                        <section title="Incoming" style="view-transition-name: section-incomingtorrents">
-                            <ul class="without-icon incoming">
-                                @foreach (var t in incoming)
-                                {
-                                    <IncomingTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
-                                }
-                            </ul>
-                        </section>
-                    }
+                    <AuthorizeView Roles="Admin, Editor" Context="_">
+                        <Authorized>
+                            <section>
+                                <button @onclick="AddMagnet">add magnet</button>
+                            </section>
+                        </Authorized>
+                    </AuthorizeView>
 
-                    if (downloading.Any())
+                    @if (incoming.Any() == false && downloading.Any() == false)
                     {
-                        <section title="Downloading" style="view-transition-name: section-downloadingtorrents">
-                            <ul class="without-icon downloading">
-                                @foreach (var t in downloading)
-                                {
-                                    <ActiveTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
-                                }
-                            </ul>
-                        </section>
+                        <aside id="no-torrent">no active torrent yet ... :(</aside>
                     }
-
-                    if (seeding.Any())
+                    else
                     {
-                        <section title="Seeding" style="view-transition-name: section-seedingtorrents">
-                            <ul class="without-icon seeding">
-                                @foreach (var t in seeding)
-                                {
-                                    <ActiveTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t />
-                                }
-                            </ul>
-                        </section>
+                        if (incoming.Any())
+                        {
+                            <section title="Incoming" style="view-transition-name: section-incomingtorrents">
+                                <ul class="without-icon incoming">
+                                    @foreach (var t in incoming)
+                                    {
+                                        <IncomingTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t Engine="@engine" />
+                                    }
+                                </ul>
+                            </section>
+                        }
+
+                        if (downloading.Any())
+                        {
+                            <section title="Downloading" style="view-transition-name: section-downloadingtorrents">
+                                <ul class="without-icon downloading">
+                                    @foreach (var t in downloading)
+                                    {
+                                        <ActiveTorrent style=@($"view-transition-name: {t.Name.Kebaberize()}") @key=t Torrent=@t Engine="@engine" />
+                                    }
+                                </ul>
+                            </section>
+                        }
                     }
                 }
             </Authorized>
@@ -93,11 +88,15 @@
 @code {
     MonoTorrent.Client.TorrentManager[] incoming = [];
     MonoTorrent.Client.TorrentManager[] downloading = [];
-    MonoTorrent.Client.TorrentManager[] seeding = [];
 
     protected override Task OnInitializedAsync()
     {
-        Torrents.Update += OnTorrentUpdate;
+        if (RendererInfo.IsInteractive)
+        {
+            Log.Information("initializing view");
+            engineAccess.Update += OnTorrentUpdate;
+            Log.Information("bound OnTorrentUpdate to Update");
+        }
         return Task.CompletedTask;
     }
 
@@ -105,7 +104,7 @@
     {
         await InvokeAsync(async () =>
         {
-            var torrents = Torrents.GetAllTorrents();
+            var torrents = engineAccess.Engine?.Torrents ?? [];
 
             var newincoming = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Metadata).ToArray();
             var newdownloading = torrents.Where(t => t.State == MonoTorrent.Client.TorrentState.Downloading).ToArray();
@@ -115,12 +114,10 @@
             var needsTransition =
                 newincoming.Length != incoming.Length
                 || newdownloading.Length != downloading.Length
-                || newseeding.Length != seeding.Length
                 ;
 
             incoming = newincoming;
             downloading = newdownloading;
-            seeding = newseeding;
 
             if (needsTransition)
             {
@@ -139,7 +136,12 @@
 
     void IDisposable.Dispose()
     {
-        Torrents.Update -= OnTorrentUpdate;
+        if (RendererInfo.IsInteractive)
+        {
+            Log.Information("disposing view");
+            engineAccess.Update -= OnTorrentUpdate;
+            Log.Information("unbound OnTorrentUpdate from Update");
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -149,28 +151,22 @@
             Console.WriteLine("checking for filehandling");
             var module = await js.InvokeAsync<IJSObjectReference>("import", "/Components/Pages/Index.razor.js?" + Random.Shared.NextInt64());
             var supported = await module.InvokeAsync<bool>("setupFileProcessing", Assembly.GetExecutingAssembly().GetName().Name);
-            if (supported)
-            {
-                Console.WriteLine("file handling supported");
-            }
-
-            //Console.WriteLine("View Transitions are supported: " + await viewTransitionService.IsSupportedAsync());
         }
     }
 
     [JSInvokable]
     public static async Task ProcessFile(string filename, byte[] bytes)
     {
-        var _ = Services.Torrents.Add(bytes);
+        // TODO: implement proper interop to singleton
+        //var _ = Services.Torrents.Add(bytes);
         await Task.CompletedTask;
     }
 
     async Task AddMagnet()
     {
-        var magnet = await js.InvokeAsync<string>("prompt", "add magnet uri");
-        if (magnet != null)
+        if (await js.InvokeAsync<string>("prompt", "add magnet uri") is string magnet && engineAccess.Engine is TorrentEngine engine)
         {
-            await Torrents.Add(MagnetLink.Parse(magnet));
+            await engine.Add(MagnetLink.Parse(magnet));
         }
     }
 }

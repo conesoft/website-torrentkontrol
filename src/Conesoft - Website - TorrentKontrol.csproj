@@ -8,11 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Conesoft.Hosting" Version="3.4.14" />
+		<PackageReference Include="Conesoft.Hosting" Version="3.5.4" />
 		<PackageReference Include="MonoTorrent" Version="3.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\blazor-components\src\Blazor Components.csproj" />
+		<ProjectReference Include="..\..\blazor-components\src\Blazor Components.csproj" />
 	</ItemGroup>
 </Project>

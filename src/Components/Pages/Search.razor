@@ -1,13 +1,20 @@
 ﻿@page "/search"
-@using System.Text.Json.Serialization
 @using System.Text.Encodings.Web
+@using System.Text.Json.Serialization
 @using Conesoft.Website.TorrentKontrol.Components.Controls
 @using Conesoft.Website.TorrentKontrol.Configuration
-@using Conesoft.Website.TorrentKontrol.Services
+@using Conesoft.Website.TorrentKontrol.Features.Runtime
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Services
+@using Conesoft.Website.TorrentKontrol.Helpers
+@using MonoTorrent
+@using Serilog
 
 @inject IOptionsSnapshot<Config> config
 @inject IHttpClientFactory factory
 @inject TorrentNamingHelper namingHelper
+@inject ITorrentEngineAccess engineAccess
+@inject NavigationManager navigation
 
 @rendermode InteractiveServer
 
@@ -28,53 +35,56 @@
     <AuthorizeView Roles="Admin, Editor" Context="_">
         <Authorized>
             <main>
-                <section id="search">
-                    <form>
-                        <input type="search" name="query" value=@Query placeholder="enter search terms here" />
-                        <button type="submit">&#x1F50E;&#xFE0E;</button>
-                    </form>
-                </section>
-
-                @if (entries?.Length > 0)
+                @if (engineAccess.Engine is TorrentEngine engine)
                 {
-                    foreach (var quality in entries)
+                    <section id="search">
+                        <form>
+                            <input type="search" name="query" value=@Query placeholder="enter search terms here" />
+                            <button type="submit">&#x1F50E;&#xFE0E;</button>
+                        </form>
+                    </section>
+
+                    @if (entries?.Length > 0)
                     {
-                        <section id="results" title="@quality.Key.ToString()!.Replace("Quality", "")">
-                            <ul class="with-icon">
-                                @foreach (var entry in quality.OrderByDescending(e => e.Size))
-                                {
-                                    <li>
-                                        @if (entry.NumFiles > 1)
-                                        {
-                                            <img src="/folder-icon.svg">
-                                        }
-                                        else
-                                        {
-                                            <img src="/file-icon.svg">
-                                        }
-                                        <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
-                                            <a href="magnet:?xt=urn:btih:@entry.InfoHash&dn=@UrlEncoder.Default.Encode(entry.Name)">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
-                                            <TagList SourceForTags="@entry.Name" />
-                                            <table class="activity">
-                                                <tr><th>▲</th><td>@entry.Seeders</td></tr>
-                                                <tr><th>▼</th><td>@entry.Leechers</td></tr>
-                                            </table>
-                                            <aside>@entry.Size.Bytes()</aside>
-                                        </section>
-                                    </li>
-                                }
-                            </ul>
-                        </section>
+                        foreach (var quality in entries)
+                        {
+                            <section id="results" title="@quality.Key.ToString()!.Replace("Quality", "")">
+                                <ul class="with-icon">
+                                    @foreach (var entry in quality.OrderByDescending(e => e.Size))
+                                    {
+                                        <li>
+                                            @if (entry.NumFiles > 1)
+                                            {
+                                                <img src="/folder-icon.svg">
+                                            }
+                                            else
+                                            {
+                                                <img src="/file-icon.svg">
+                                            }
+                                            <section class="@(entry.NumFiles > 1 ? "folder" : "file")">
+                                                <a href @onclick="@(() => AddEntry(entry, engine))">@namingHelper.GenerateCleanNameFromString(entry.Name)</a>
+                                                <TagList SourceForTags="@entry.Name" />
+                                                <table class="activity">
+                                                    <tr><th>▲</th><td>@entry.Seeders</td></tr>
+                                                    <tr><th>▼</th><td>@entry.Leechers</td></tr>
+                                                </table>
+                                                <aside>@entry.Size.Bytes()</aside>
+                                            </section>
+                                        </li>
+                                    }
+                                </ul>
+                            </section>
+                        }
                     }
-                }
-                else if (entries != null)
-                {
-                    <aside id="no-results">no results found for '@Query' ... :(</aside>
-                }
+                    else if (entries != null)
+                    {
+                        <aside id="no-results">no results found for '@Query' ... :(</aside>
+                    }
 
-                @if (Query?.Length > 0 && entries == null)
-                {
-                    <aside id="no-results">searching ...</aside>
+                    @if (Query?.Length > 0 && entries == null)
+                    {
+                        <aside id="no-results">searching ...</aside>
+                    }
                 }
 
             </main>
@@ -87,6 +97,19 @@
 
     [SupplyParameterFromQuery]
     public string? Query { get; set; }
+
+    async Task AddEntry(Entry entry, TorrentEngine engine)
+    {
+        var link = $"magnet:?xt=urn:btih:{entry.InfoHash}&dn={entry.Name}";
+
+        var trackers = string.Join("&tr=", config.Value.Trackers.Select(t => UrlEncoder.Default.Encode(t)));
+
+        link += "&tr=" + trackers;
+        Log.Information("trackers: {trackers}", trackers);
+
+        await engine.Add(MagnetLink.Parse(link));
+        navigation.NavigateTo("/", forceLoad: true);
+    }
 
     protected override async Task OnParametersSetAsync()
     {

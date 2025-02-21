@@ -1,9 +1,11 @@
 ﻿@using Conesoft.Blazor.Components.Interfaces
+@using Conesoft.Website.TorrentKontrol.Features.Runtime
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Services
 @using Humanizer.Bytes
 @using MonoTorrent.Client
 
 @inject ICleanNameGenerator cleanName
-@inject Services.Torrents Torrents
+@inject TorrentService Torrents
 
 <li class="torrent" title="@(Torrent.Torrent?.Name ?? string.Empty)">
     <progress max='100' value=@Torrent.Progress></progress>
@@ -27,7 +29,7 @@
     <menu>
         <AuthorizeView Roles="Admin, Editor">
             <li>
-                <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+                <button dangerous @onclick="@(() => Engine.Remove(Torrent) ?? Task.CompletedTask)">✕</button>
             </li>
         </AuthorizeView>
     </menu>
@@ -39,6 +41,9 @@
 
     [Parameter]
     public TorrentManager Torrent { get; set; } = default!;
+
+    [Parameter]
+    public TorrentEngine Engine { get; set; } = default!;
 
     string cleanedName = "";
 

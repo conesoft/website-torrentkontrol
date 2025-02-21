@@ -1,10 +1,13 @@
 ﻿@page "/addmagneturi"
+@using Conesoft.Tools
 @using Conesoft.Website.TorrentKontrol.Components.Controls
-@using Conesoft.Website.TorrentKontrol.Services
+@using Conesoft.Website.TorrentKontrol.Features.Runtime
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Services
 @using Microsoft.JSInterop
 @using MonoTorrent
 
-@inject Torrents torrents
+@inject ITorrentEngineAccess engineAccess
 @inject IJSRuntime js
 @inject NavigationManager navigation
 
@@ -44,17 +47,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Uri != null)
+        if (Uri != null && engineAccess.Engine is TorrentEngine engine)
         {
             var uri = System.Uri.UnescapeDataString(Uri);
             magnet = MagnetLink.Parse(uri);
-            try
-            {
-                await torrents.Add(magnet);
-            }
-            catch (Exception)
-            {
-            }
+            await Safe.TryAsync(async () => await engine.Add(magnet));
         }
     }
 

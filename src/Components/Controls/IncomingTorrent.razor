@@ -1,8 +1,10 @@
 ﻿@using Conesoft.Blazor.Components.Interfaces
+@using Conesoft.Website.TorrentKontrol.Features.Runtime
+@using Conesoft.Website.TorrentKontrol.Features.Runtime.Services
 @using MonoTorrent.Client
 
 @inject ICleanNameGenerator cleanName
-@inject Services.Torrents Torrents
+@inject TorrentService Torrents
 
 <li class="torrent" title="@Torrent.MagnetLink.Name">
     <section>
@@ -11,7 +13,7 @@
     </section>
     <menu>
         <li>
-            <button dangerous @onclick="@(() => Torrents.Remove(Torrent))">✕</button>
+            <button dangerous @onclick="@(() => Engine.Remove(Torrent) ?? Task.CompletedTask)">✕</button>
         </li>
     </menu>
 </li>
@@ -22,6 +24,9 @@
 
     [Parameter]
     public TorrentManager Torrent { get; set; } = default!;
+
+    [Parameter]
+    public TorrentEngine Engine { get; set; } = default!;
 
     string cleanedName = "";
 

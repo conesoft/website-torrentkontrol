@@ -1,7 +1,7 @@
 ﻿using Conesoft.Blazor.Components.Interfaces;
 using System.Text.RegularExpressions;
 
-namespace Conesoft.Website.TorrentKontrol.Services;
+namespace Conesoft.Website.TorrentKontrol.Helpers;
 
 public partial class TorrentNamingHelper : ITagListGenerator, ICleanNameGenerator
 {
