@@ -1,3 +1,5 @@
+using Conesoft.Website.TorrentKontrol.Features.Runtime.Client;
+
 namespace Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces;
 
 public interface ITorrentEngineAccess

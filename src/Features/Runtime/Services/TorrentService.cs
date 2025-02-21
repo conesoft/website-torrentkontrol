@@ -1,6 +1,7 @@
 ﻿using Conesoft.Hosting;
 using Conesoft.Notifications;
 using Conesoft.Website.TorrentKontrol.Configuration;
+using Conesoft.Website.TorrentKontrol.Features.Runtime.Client;
 using Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces;
 using Microsoft.Extensions.Options;
 using MonoTorrent.Client;
@@ -39,8 +40,6 @@ public class TorrentService(IOptions<Config> config, HostEnvironment environment
                 }
 
                 var torrents = engine.Torrents.Where(t => t.State == TorrentState.Downloading || t.State == TorrentState.Starting).ToArray();
-                Log.Information("active torrents: {torrents}", torrents);
-                Log.Information("file entries:    {entries}", downloadFolder.Filtered("", false).Select(e => e.Name));
                 foreach (var entry in downloadFolder.Filtered("", false))
                 {
                     entry.Visible = !torrents.Any(t => t.Torrent?.Name == entry.Name);
@@ -73,7 +72,6 @@ public class TorrentService(IOptions<Config> config, HostEnvironment environment
                 e.CriticalException += Engine_CriticalException;
                 e.StatsUpdate += Engine_StatsUpdate;
             });
-
             Log.Information("torrent service started, engine {enginestatus}", engine != null ? "running" : "not running");
         }, cancellationToken);
 
@@ -85,11 +83,8 @@ public class TorrentService(IOptions<Config> config, HostEnvironment environment
         Log.Information("stopping torrent service");
         if (engine != null)
         {
-            //timer?.Dispose();
             await (engine as IAsyncDisposable).DisposeAsync();
-            //timer = null;
             engine = null;
-
             await (UpdateEvent?.Invoke() ?? Task.CompletedTask);
         }
         Log.Information("torrent service stopped");

@@ -7,7 +7,7 @@ using MonoTorrent;
 using MonoTorrent.Client;
 using Serilog;
 
-namespace Conesoft.Website.TorrentKontrol.Features.Runtime;
+namespace Conesoft.Website.TorrentKontrol.Features.Runtime.Client;
 
 public class TorrentEngine(ClientEngine engine, Files.Directory downloadFolder, Files.File stateFile) : IAsyncDisposable
 {

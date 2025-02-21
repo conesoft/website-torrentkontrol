@@ -1,5 +1,5 @@
 ﻿using Conesoft.Hosting;
-using Conesoft.Website.TorrentKontrol.Features.Runtime;
+using Conesoft.Website.TorrentKontrol.Features.Runtime.Client;
 using Conesoft.Website.TorrentKontrol.Features.Runtime.Interfaces;
 using MonoTorrent;
 
